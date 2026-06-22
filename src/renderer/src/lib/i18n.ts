@@ -509,7 +509,13 @@ const dicts: Record<Lang, Record<string, string>> = {
     'finance.account.savings': 'Poupança',
     'finance.account.credit': 'Cartão de crédito',
     'finance.account.investment': 'Investimento',
-    'finance.account.cash': 'Dinheiro'  }
+    'finance.account.cash': 'Dinheiro',
+
+    // Dashboard tabs (bug fix - faltavam em PT-BR)
+    'tab.overview': 'Visão geral',
+    'tab.today': 'Hoje',
+    'tab.insights': 'Insights'
+  }
 }
 
 interface LangState {
