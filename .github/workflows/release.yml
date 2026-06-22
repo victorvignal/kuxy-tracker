@@ -122,16 +122,17 @@ jobs:
 
       - name: Create release
         # Trocado de softprops/action-gh-release@v2 (archived, com bug em 2025)
-        # pra gh CLI direto. O token GITHUB_TOKEN já tem contents: write via
+        # pra gh CLI direto. Token GITHUB_TOKEN tem contents: write via
         # permissions no topo do workflow.
+        # IMPORTANTE: usa array pra preservar paths com espaço (ex: 'KUXY Setup 0.3.0.exe').
+        # Sem aspas, bash quebra em palavras e 'KUXY' vira glob solto que falha.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
+          set -euo pipefail
           # Achata todos os artefatos em release-assets/. Cada artifact zip
           # do upload-artifact@v4 tem uma camada de diretório extra.
           mkdir -p release-assets
-          # artifacts/<artifact-name>/... — extrai tudo pra release-assets/
           for d in artifacts/*/; do
             if [ -d "$d" ]; then
               find "$d" -type f -exec cp {} release-assets/ \;
@@ -140,9 +141,15 @@ jobs:
           echo "=== Assets encontrados ==="
           ls -la release-assets/
           echo "=== Criando release ${{ github.ref_name }} ==="
-          # Passa todos os arquivos via $(find ...)
-          ASSETS=$(find release-assets -type f | sort)
+          # Array preserva paths com espaço. -print0/-0z evita problema
+          # com whitespace/newlines em nomes.
+          declare -a ASSETS=()
+          while IFS= read -r -d '' f; do
+            ASSETS+=("$f")
+          done < <(find release-assets -type f -print0 | sort -z)
+          echo "Total de assets: ${#ASSETS[@]}"
+          printf '  - %s\n' "${ASSETS[@]}"
           gh release create "${{ github.ref_name }}" \
             --title "${{ github.ref_name }}" \
             --generate-notes \
-            $ASSETS
+            "${ASSETS[@]}"
