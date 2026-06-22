@@ -121,20 +121,28 @@ jobs:
           path: artifacts
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          generate_release_notes: true
-          draft: false
-          prerelease: false
-          files: |
-            artifacts/**/*.exe
-            artifacts/**/*.dmg
-            artifacts/**/*.AppImage
-            artifacts/**/*.deb
-            artifacts/**/*.zip
-            artifacts/**/*.blockmap
-            artifacts/**/*.yml
+        # Trocado de softprops/action-gh-release@v2 (archived, com bug em 2025)
+        # pra gh CLI direto. O token GITHUB_TOKEN já tem contents: write via
+        # permissions no topo do workflow.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          # Achata todos os artefatos em release-assets/. Cada artifact zip
+          # do upload-artifact@v4 tem uma camada de diretório extra.
+          mkdir -p release-assets
+          # artifacts/<artifact-name>/... — extrai tudo pra release-assets/
+          for d in artifacts/*/; do
+            if [ -d "$d" ]; then
+              find "$d" -type f -exec cp {} release-assets/ \;
+            fi
+          done
+          echo "=== Assets encontrados ==="
+          ls -la release-assets/
+          echo "=== Criando release ${{ github.ref_name }} ==="
+          # Passa todos os arquivos via $(find ...)
+          ASSETS=$(find release-assets -type f | sort)
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes \
+            $ASSETS
