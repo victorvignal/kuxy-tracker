@@ -1,0 +1,11 @@
+node_modules/
+out/
+release/
+*.tsbuildinfo
+*.log
+*.db
+.DS_Store
+
+# Scripts de debug locais (remover quando não precisar)
+debug_kuxy.js
+debug_kuxy2.js
