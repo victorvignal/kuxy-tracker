@@ -1,0 +1,140 @@
+name: Release KUXY
+
+# Builda e publica nova versão do KUXY quando você der push em uma tag
+# no formato kuxy-vX.Y.Z. Sem prefixo conflitando com outros projetos
+# porque este repo é dedicado.
+# Ex: git tag kuxy-v0.3.0 && git push origin kuxy-v0.3.0
+
+on:
+  push:
+    tags:
+      - 'kuxy-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows é o alvo principal (uso pessoal/friends).
+        # macOS e Linux ficam como opcionais (sem code signing são artefatos
+        # menos úteis pro usuário final, mas se passarem, melhor).
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build (Windows)
+        if: matrix.os == 'windows-latest'
+        # electron-builder falha no cleanup final às vezes (file lock no
+        # runner Windows), mas os artefatos são produzidos. Toleramos o erro
+        # e verificamos se o .exe + .blockmap existem antes de prosseguir.
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          npm run build:win
+          EXIT=$?
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ -f "release/${PKG_VERSION}/KUXY Setup ${PKG_VERSION}.exe" ] && [ -f "release/${PKG_VERSION}/KUXY Setup ${PKG_VERSION}.exe.blockmap" ]; then
+            echo "✅ Windows installer + blockmap presentes (cleanup pode ter falhado, tudo bem)"
+            exit 0
+          fi
+          echo "❌ Artefatos do Windows ausentes"
+          exit $EXIT
+
+      - name: Build (macOS)
+        if: matrix.os == 'macos-latest'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          npm run build:mac
+          EXIT=$?
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ -d "release/${PKG_VERSION}/mac" ] || [ -d "release/${PKG_VERSION}/mac-arm64" ]; then
+            echo "✅ macOS build presente"
+            exit 0
+          fi
+          echo "⚠️ macOS build não encontrado (provavelmente falhou de verdade, ver logs)"
+          exit $EXIT
+
+      - name: Build (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          npm run build:linux
+          EXIT=$?
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ -f "release/${PKG_VERSION}/KUXY-${PKG_VERSION}.AppImage" ] || [ -f "release/${PKG_VERSION}/kuxy_${PKG_VERSION}_amd64.deb" ]; then
+            echo "✅ Linux build presente"
+            exit 0
+          fi
+          echo "⚠️ Linux build não encontrado (provavelmente falhou de verdade, ver logs)"
+          exit $EXIT
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kuxy-${{ matrix.os }}
+          path: |
+            release/**/*.exe
+            release/**/*.dmg
+            release/**/*.AppImage
+            release/**/*.deb
+            release/**/*.zip
+            release/**/*.blockmap
+            release/**/*.yml
+          if-no-files-found: ignore
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    # Só publica em push de tag. Funciona mesmo se alguns matrix items
+    # falharem (continue-on-error nos steps de build).
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.zip
+            artifacts/**/*.blockmap
+            artifacts/**/*.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

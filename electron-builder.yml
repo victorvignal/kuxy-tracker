@@ -26,5 +26,5 @@ linux:
 publish:
   provider: github
   owner: victorvignal
-  repo: kibo
+  repo: kuxy-tracker
   releaseType: release
