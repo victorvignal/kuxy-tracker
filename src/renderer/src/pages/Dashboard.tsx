@@ -38,6 +38,7 @@ import {
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
 import type { Habit, Completion } from '../types'
+import { NewHabitDialog } from '../components/habits/NewHabitDialog'
 
 type Period = 7 | 30 | 90 | 365
 type Tab = 'overview' | 'today' | 'insights'
@@ -52,6 +53,7 @@ export function Dashboard() {
   const [habits, setHabits] = useState<Habit[]>([])
   const [completions, setCompletions] = useState<Completion[]>([])
   const [focusSeconds, setFocusSeconds] = useState(0)
+  const [showNewHabit, setShowNewHabit] = useState(false)
 
   const load = async () => {
     const { from, to } = rangeStr(period)
@@ -182,6 +184,32 @@ export function Dashboard() {
       ? t('dashboard.subtitle_personal')
       : t('dashboard.subtitle_professional')
 
+  // Exporta os hábitos do perfil ativo como CSV.
+  // Escopo Fase 2: essa é a versão simples (só hábitos). Versão completa vai
+  // ter filtros (período, status), incluir completions, journal entries, etc.
+  const exportHabitsCsv = () => {
+    if (habits.length === 0) return
+    const header = ['id', 'name', 'description', 'color', 'icon', 'archived', 'created_at']
+    const escape = (v: unknown) => {
+      const s = v == null ? '' : String(v)
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const rows = habits.map((h) =>
+      [h.id, h.name, h.description, h.color, h.icon, h.archived ? '1' : '0', h.createdAt]
+        .map(escape)
+        .join(',')
+    )
+    const csv = [header.join(','), ...rows].join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const today = new Date().toISOString().slice(0, 10)
+    a.download = `kuxy-habits-${activeWs?.slug ?? 'profile'}-${today}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="p-8 space-y-6 max-w-[1400px] mx-auto">
       {/* Greeting */}
@@ -193,8 +221,14 @@ export function Dashboard() {
           <p className="text-sm text-text-muted mt-1.5">{workspaceSubtitle}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="btn btn-secondary">{t('common.export')}</button>
-          <button className="btn btn-primary">
+          <button
+            className="btn btn-secondary"
+            onClick={exportHabitsCsv}
+            title={`${t('common.export')} (CSV)`}
+          >
+            {t('common.export')}
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowNewHabit(true)}>
             <Sparkles className="w-3.5 h-3.5" />
             {t('common.new')}
           </button>
@@ -523,6 +557,10 @@ export function Dashboard() {
           )}
         </div>
       </div>
+      )}
+
+      {showNewHabit && (
+        <NewHabitDialog onClose={() => setShowNewHabit(false)} onCreated={load} />
       )}
     </div>
   )
