@@ -149,11 +149,12 @@ function UpdatesSection() {
   const t = useT()
   const [version, setVersion] = useState('—')
   const [status, setStatus] = useState<UpdateStatus>({ state: 'idle' })
-  const isDev = !(typeof window !== 'undefined' && (window as any).process?.versions?.electron)
+  const [isDev, setIsDev] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.api?.update) return
     window.api.update.getVersion().then(setVersion).catch(() => {})
+    window.api.isDev?.().then(setIsDev).catch(() => {})
     const off = window.api.update.onStatus((s) => setStatus(s))
     return () => {
       if (typeof off === 'function') off()

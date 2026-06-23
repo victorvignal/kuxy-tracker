@@ -90,6 +90,7 @@ const api = {
       return () => ipcRenderer.removeListener('update:status', listener)
     }
   },
+  isDev: () => ipcRenderer.invoke('app:isDev') as Promise<boolean>,
   finance: {
     accounts: {
       list: (params?: { profileId?: number; includeArchived?: boolean }) =>
