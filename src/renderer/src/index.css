@@ -8,31 +8,92 @@
  * evitando flash de cor errada.
  */
 :root {
-  --color-bg: #0a0a0f;
-  --color-bg-subtle: #101018;
-  --color-bg-card: #15151f;
-  --color-bg-hover: #1c1c28;
-  --color-border: #22222f;
-  --color-border-strong: #2d2d3d;
-  --color-text: #e7e7ee;
-  --color-text-muted: #8b8b9a;
-  --color-text-subtle: #5e5e6e;
-  --color-accent: #a855f7;
-  --color-accent-hover: #9333ea;
-  --color-accent-soft: rgba(168, 85, 247, 0.12);
-  --color-success: #22c55e;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
+  /* Backgrounds */
+  --color-bg: #0a0a0b;
+  --color-bg-subtle: #0c0c0e;
+  --color-bg-card: #141416;
+  --color-bg-card-alt: #1b1b1e;
+  --color-bg-row: #131315;
+  --color-bg-hover: #1a1a1d;
+  --color-bg-btn: #161619;
+  --color-bg-btn-alt: #101012;
+  --color-bg-input: #121214;
+  --color-bg-chip: #202024;
+  /* Borders */
+  --color-border: #1f1f22;
+  --color-border-soft: #1b1b1e;
+  --color-border-med: #232327;
+  --color-border-strong: #2a2a2e;
+  --color-border-hard: #26262a;
+  --color-border-faint: #161618;
+  --color-border-row: #1d1d20;
+  --color-border-dot: #3a3a3e;
+  --color-border-dot-alt: #3a3a40;
+  --color-border-chip: #2e2e32;
+  /* Text */
+  --color-text: #e8e8ea;
+  --color-text-bright: #f4f4f6;
+  --color-text-vivid: #f0f0f2;
+  --color-text-muted: #86868d;
+  --color-text-muted-2: #9a9aa0;
+  --color-text-subtle: #7a7a80;
+  --color-text-subtle-2: #6a6a70;
+  --color-text-dim: #5b5b62;
+  /* Accent + status */
+  --color-accent: #8b5cf6;
+  --color-accent-hover: #7c3aed;
+  --color-accent-soft: rgba(139, 92, 246, 0.12);
+  --color-accent-light: #a78bfa;
+  --color-accent-dark: #6d4ee0;
+  --color-accent-line: #c9c9cf;
+  --color-success: #4ade80;
+  --color-danger: #f87171;
+  --color-warning: #facc15;
+  --color-info: #22d3ee;
+  --color-trial-zap: #cbd5e1;
+  --color-trial-progress: #6b6b72;
+  --color-user-avatar: #5b6b8c;
+  --color-user-avatar-dark: #2c3447;
+  /* Chart palette */
+  --color-chart-primary: #8b5cf6;
+  --color-chart-secondary: #a78bfa;
+  --color-chart-tertiary: #6d4ee0;
+  --color-chart-quaternary: #4f4193;
   --color-scrim: rgba(0, 0, 0, 0.6);
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --sidebar-width: 240px;
-  --topbar-height: 56px;
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 9px;
+  --radius-lg: 10px;
+  --radius-xl: 13px;
+  --radius-2xl: 14px;
+  /* Typography (from tokens.ts type) */
+  --type-sidebar-item: 14px;
+  --type-profile-name: 19px;
+  --type-page-title: 17px;
+  --type-card-title: 15px;
+  --type-section-title: 13px;
+  --type-body: 14px;
+  --type-body-sm: 13.5px;
+  --type-body-xs: 13px;
+  --type-stat-value: 22px;
+  --type-stat-label: 13px;
+  --type-revenue-total: 27px;
+  --type-insight: 11.5px;
+  --type-label-sm: 13px;
+  --type-label: 12px;
+  --type-label-xs: 11px;
+  --type-table-header: 12px;
+  --type-table-body: 13px;
+  --type-badge: 11.5px;
+  --type-donut-label: 9px;
+  --type-donut-value: 21px;
+  --type-micro: 11px;
+  /* Spacing */
+  --sidebar-width: 268px;
+  --topbar-height: 56px; /* overridden inline by Topbar component to 38px */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --shadow-card: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-card: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 0 0 1px rgba(255, 255, 255, 0.05);
   --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 

@@ -1,13 +1,13 @@
 import { useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import {
+  LayoutGrid,
+  Search,
+  Plus,
+  Send
+} from 'lucide-react'
 import { useT } from '../../lib/i18n'
 import { NewHabitDialog } from '../habits/NewHabitDialog'
-import {
-  IconDashboard,
-  IconSearch,
-  IconPlus,
-  IconInvite
-} from '../template-icons/TemplateIcon'
 
 const TITLE_KEYS: Record<string, string> = {
   '/': 'nav.dashboard',
@@ -57,10 +57,8 @@ export function Topbar() {
   const handleInvite = async () => {
     try {
       await navigator.clipboard.writeText('https://kuxy.app/download')
-      // simple inline feedback — toast padrão não é requisito do template
       alert(t('topbar.invite_copied'))
     } catch {
-      // fallback
       alert('https://kuxy.app/download')
     }
   }
@@ -68,56 +66,81 @@ export function Topbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-20 bg-bg border-b border-border flex items-center gap-[18px] shrink-0"
-        style={{ padding: '14px 28px', height: 'var(--topbar-height)' }}
+        className="flex items-center gap-4 border-b shrink-0"
+        style={{
+          height: '38px',
+          padding: '0 24px',
+          background: 'var(--color-bg)',
+          borderColor: '#161619'
+        }}
       >
-        {/* Title com ícone (template: Dashboard icon + name) */}
-        <div className="flex items-center gap-2.5">
-          <IconDashboard size={20} color="var(--color-text)" />
-          <span className="text-tmpl-title-lg">{title}</span>
+        {/* Title com ícone LayoutGrid 20px */}
+        <div className="flex items-center gap-[9px] flex-1 min-w-0">
+          <LayoutGrid size={20} color="#cfcfd4" strokeWidth={1.75} />
+          <span
+            className="text-[17px] font-semibold tracking-[-.01em]"
+            style={{ color: '#f4f4f6' }}
+          >
+            {title}
+          </span>
         </div>
 
-        {/* Search bar com atalho ⌘K (template) */}
-        <div className="flex-1 max-w-[430px] relative">
-          <IconSearch
-            size={16}
-            color="var(--color-text-subtle)"
-            className="absolute left-[14px] top-1/2 -translate-y-1/2"
-          />
+        {/* Search bar 300x38 com ícone dentro + ⌘K à direita */}
+        <div
+          className="flex items-center gap-[9px] rounded-[9px] shrink-0"
+          style={{
+            width: '300px',
+            height: '38px',
+            padding: '0 12px',
+            background: '#121214',
+            border: '1px solid #232327',
+            color: '#7a7a80'
+          }}
+        >
+          <Search size={16} strokeWidth={1.75} />
           <input
             id="topbar-search"
             type="text"
             placeholder={t('common.search')}
-            className="w-full bg-bg-card border border-border rounded-[10px] text-tmpl-body text-text placeholder:text-text-subtle outline-none focus:border-border-strong transition-colors"
-            style={{ padding: '10px 50px 10px 40px' }}
+            className="flex-1 bg-transparent border-none outline-none text-[13px] text-text placeholder:text-text-subtle-2"
           />
-          <div className="absolute right-[10px] top-1/2 -translate-y-1/2 flex gap-0.5">
-            <span className="text-tmpl-micro text-text-subtle border border-border bg-bg rounded-[5px] px-1.5 py-0.5">
-              ⌘K
-            </span>
-          </div>
+          <span
+            className="text-[11px] border rounded-[5px] px-1.5 py-px"
+            style={{ borderColor: '#2a2a2e', color: '#6a6a70' }}
+          >
+            ⌘K
+          </span>
         </div>
 
-        <div className="flex-1" />
+        {/* Divisor */}
+        <div className="w-px h-6" style={{ background: '#232327' }} />
 
-        {/* Botão Add (template) */}
+        {/* Botão Add (38px height, padding 0 14px, border-radius 9px) */}
         <button
           onClick={() => setShowNewHabit(true)}
-          className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors"
-          style={{ padding: '9px 15px' }}
+          className="flex items-center gap-[7px] h-[38px] px-[14px] rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
+          style={{
+            background: '#161619',
+            border: '1px solid #232327',
+            color: '#e8e8ea'
+          }}
         >
-          {t('common.add')}
-          <IconPlus size={15} />
+          Add
+          <Plus size={16} strokeWidth={1.75} />
         </button>
 
-        {/* Botão Invite (template) */}
+        {/* Botão Invite (38px height, padding 0 16px, border-radius 9px) */}
         <button
           onClick={handleInvite}
-          className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors"
-          style={{ padding: '9px 15px' }}
+          className="flex items-center gap-[7px] h-[38px] px-4 rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
+          style={{
+            background: '#161619',
+            border: '1px solid #232327',
+            color: '#e8e8ea'
+          }}
         >
-          <IconInvite size={15} />
-          {t('topbar.invite')}
+          <Send size={16} strokeWidth={1.75} />
+          Invite
         </button>
       </header>
 

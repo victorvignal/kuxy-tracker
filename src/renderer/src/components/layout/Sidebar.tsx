@@ -1,65 +1,91 @@
-﻿import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+import {
+  LayoutDashboard,
+  Bell,
+  CreditCard,
+  Wallet,
+  Users,
+  FileText,
+  Landmark,
+  Globe,
+  MoreHorizontal,
+  Settings as SettingsIcon,
+  HelpCircle,
+  MessageSquare,
+  Zap,
+  ChevronsUpDown,
+  ChevronRight
+} from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useProfileStore } from '../../store/useProfile'
 import { useT } from '../../lib/i18n'
-import { ProfileSwitcher } from './ProfileSwitcher'
-import {
-  BrandLogo,
-  IconDashboard,
-  IconNotification,
-  IconEarnings,
-  IconSpending,
-  IconSubscriptions,
-  IconReports,
-  IconTransactions,
-  IconPerformance,
-  IconMoreDots,
-  IconSettings,
-  IconHelp,
-  IconFeedback,
-  ChevronDoubleDown,
-  ArrowRight
-} from '../template-icons/TemplateIcon'
 
 type Item = {
   path: string
-  labelKey: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Icon: any
+  label: string // chave i18n
+  Icon: typeof LayoutDashboard
 }
 
 const MAIN_MENU: Item[] = [
-  { path: '/', labelKey: 'nav.dashboard', Icon: IconDashboard },
-  { path: '/notifications', labelKey: 'nav.notifications', Icon: IconNotification },
-  { path: '/earnings', labelKey: 'nav.earnings', Icon: IconEarnings },
-  { path: '/spending', labelKey: 'nav.spending', Icon: IconSpending },
-  { path: '/subscriptions', labelKey: 'nav.subscriptions', Icon: IconSubscriptions },
-  { path: '/reports', labelKey: 'nav.reports', Icon: IconReports },
-  { path: '/transactions', labelKey: 'nav.transactions', Icon: IconTransactions },
-  { path: '/performance', labelKey: 'nav.performance', Icon: IconPerformance },
-  { path: '/more', labelKey: 'nav.more', Icon: IconMoreDots }
+  { path: '/', label: 'nav.dashboard', Icon: LayoutDashboard },
+  { path: '/notifications', label: 'nav.notifications', Icon: Bell },
+  { path: '/earnings', label: 'nav.earnings', Icon: CreditCard },
+  { path: '/spending', label: 'nav.spending', Icon: Wallet },
+  { path: '/subscriptions', label: 'nav.subscriptions', Icon: Users },
+  { path: '/reports', label: 'nav.reports', Icon: FileText },
+  { path: '/transactions', label: 'nav.transactions', Icon: Landmark },
+  { path: '/performance', label: 'nav.performance', Icon: Globe },
+  { path: '/more', label: 'nav.more', Icon: MoreHorizontal }
 ]
 
 const GENERAL: Item[] = [
-  { path: '/settings', labelKey: 'nav.settings', Icon: IconSettings },
-  { path: '/help', labelKey: 'nav.help', Icon: IconHelp },
-  { path: '/feedback', labelKey: 'nav.feedback', Icon: IconFeedback }
+  { path: '/settings', label: 'nav.settings', Icon: SettingsIcon },
+  { path: '/help', label: 'nav.help', Icon: HelpCircle },
+  { path: '/feedback', label: 'nav.feedback', Icon: MessageSquare }
 ]
 
-// Mapas legado â†’ novo: rotas que existiam no KUXY antigo mas nÃ£o no template.
-// Mantidas no mapa de paths pra que deep links e bookmarks nÃ£o quebrem,
-// mas sÃ³ aparecem se o perfil permitir explicitamente (default = false).
+// Itens legados do KUXY (não aparecem por default — só se o usuário
+// adicionar explicitamente via customização de sidebar do perfil).
 const LEGACY_PATH_MAP: Record<string, Item> = {
-  '/habits': { path: '/habits', labelKey: 'nav.habits', Icon: IconPerformance },
-  '/routines': { path: '/routines', labelKey: 'nav.routines', Icon: IconPerformance },
-  '/calendar': { path: '/calendar', labelKey: 'nav.calendar', Icon: IconPerformance },
-  '/stats': { path: '/stats', labelKey: 'nav.stats', Icon: IconPerformance },
-  '/journal': { path: '/journal', labelKey: 'nav.journal', Icon: IconPerformance },
-  '/focus': { path: '/focus', labelKey: 'nav.focus', Icon: IconPerformance },
-  '/goals': { path: '/goals', labelKey: 'nav.goals', Icon: IconPerformance },
-  '/finance': { path: '/finance', labelKey: 'nav.finance', Icon: IconSpending },
-  '/projects': { path: '/projects', labelKey: 'nav.projects', Icon: IconPerformance },
-  '/contacts': { path: '/contacts', labelKey: 'nav.contacts', Icon: IconPerformance }
+  '/habits': { path: '/habits', label: 'nav.habits', Icon: LayoutDashboard },
+  '/routines': { path: '/routines', label: 'nav.routines', Icon: LayoutDashboard },
+  '/calendar': { path: '/calendar', label: 'nav.calendar', Icon: LayoutDashboard },
+  '/stats': { path: '/stats', label: 'nav.stats', Icon: LayoutDashboard },
+  '/journal': { path: '/journal', label: 'nav.journal', Icon: LayoutDashboard },
+  '/focus': { path: '/focus', label: 'nav.focus', Icon: LayoutDashboard },
+  '/goals': { path: '/goals', label: 'nav.goals', Icon: LayoutDashboard },
+  '/finance': { path: '/finance', label: 'nav.finance', Icon: Wallet },
+  '/projects': { path: '/projects', label: 'nav.projects', Icon: LayoutDashboard },
+  '/contacts': { path: '/contacts', label: 'nav.contacts', Icon: LayoutDashboard }
+}
+
+function SidebarItem({ item, t }: { item: Item; t: (k: string) => string }) {
+  return (
+    <NavLink
+      to={item.path}
+      end={item.path === '/'}
+      className={({ isActive }) =>
+        cn(
+          'relative flex items-center gap-[11px] px-3 py-[9px] rounded-lg text-[14px] font-medium transition-colors group',
+          isActive ? 'text-text' : 'text-text-subtle hover:text-text'
+        )
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <span
+            className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r transition-opacity"
+            style={{
+              background: 'var(--color-accent-line)',
+              opacity: isActive ? 1 : 0
+            }}
+          />
+          <item.Icon size={18} strokeWidth={1.75} />
+          <span>{t(item.label)}</span>
+        </>
+      )}
+    </NavLink>
+  )
 }
 
 export function Sidebar() {
@@ -67,165 +93,138 @@ export function Sidebar() {
   const navigate = useNavigate()
   const active = useProfileStore((s) => s.getActive())
 
-  // Itens do template (sidebar nova) + itens legados permitidos pelo perfil.
-  // Default = sÃ³ os itens do template. Itens antigos ficam disponÃ­veis se o
-  // usuÃ¡rio adicionar via customizaÃ§Ã£o de sidebar do perfil.
   const templatePaths = new Set([...MAIN_MENU.map((i) => i.path), ...GENERAL.map((i) => i.path)])
   const allowedLegacy =
     active?.sidebarItems?.filter((p) => !templatePaths.has(p) && LEGACY_PATH_MAP[p]) ?? []
 
   return (
     <aside
-      className="w-sidebar shrink-0 border-r border-border bg-bg-subtle flex flex-col h-screen"
-      style={{ width: 'var(--sidebar-width)' }}
+      className="shrink-0 border-r border-[#1b1b1e] flex flex-col h-screen"
+      style={{
+        width: 'var(--sidebar-width)',
+        background: 'var(--color-bg-subtle)',
+        padding: '22px 16px 16px'
+      }}
     >
-      {/* Brand / Profile switcher (template: 18px 16px 14px padding).
-         ProfileSwitcher renderiza seu prÃ³prio botÃ£o trigger com o styling
-         exato do template (avatar preto + raio roxo + nome + chevron duplo)
-         e cuida do dropdown modal de perfis. */}
-      <div className="px-4 pt-[18px] pb-[14px]">
-        <ProfileSwitcher />
-      </div>
-
-      {/* Nav scrollable */}
-      <div className="flex-1 overflow-y-auto px-3 pb-2">
-        {/* Main Menu heading */}
-        <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-2 text-text-subtle text-tmpl-micro uppercase tracking-[.06em]">
-          <span>{t('sidebar.main_menu')}</span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </div>
-
-        <nav className="flex flex-col gap-0.5">
-          {MAIN_MENU.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-tmpl-body transition-colors',
-                  isActive
-                    ? 'bg-bg-hover text-text'
-                    : 'text-text-muted hover:bg-bg-hover hover:text-text'
-                )
-              }
-            >
-              <item.Icon size={17} color="currentColor" />
-              <span>{t(item.labelKey)}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Itens legados permitidos pelo perfil (default = vazio) */}
-        {allowedLegacy.length > 0 && (
-          <>
-            <div className="flex items-center gap-1.5 px-2 pt-4 pb-2 text-text-subtle text-tmpl-micro uppercase tracking-[.06em]">
-              <span>{t('sidebar.legacy')}</span>
-            </div>
-            <nav className="flex flex-col gap-0.5">
-              {allowedLegacy.map((path) => {
-                const item = LEGACY_PATH_MAP[path]
-                return (
-                  <NavLink
-                    key={path}
-                    to={path}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-tmpl-body transition-colors',
-                        isActive
-                          ? 'bg-bg-hover text-text'
-                          : 'text-text-muted hover:bg-bg-hover hover:text-text'
-                      )
-                    }
-                  >
-                    <item.Icon size={17} color="currentColor" />
-                    <span>{t(item.labelKey)}</span>
-                  </NavLink>
-                )
-              })}
-            </nav>
-          </>
-        )}
-
-        {/* General heading */}
-        <div className="flex items-center gap-1.5 px-2 pt-[18px] pb-2 text-text-subtle text-tmpl-micro uppercase tracking-[.06em]">
-          <span>{t('sidebar.general')}</span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </div>
-
-        <nav className="flex flex-col gap-0.5">
-          {GENERAL.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-tmpl-body transition-colors',
-                  isActive
-                    ? 'bg-bg-hover text-text'
-                    : 'text-text-muted hover:bg-bg-hover hover:text-text'
-                )
-              }
-            >
-              <item.Icon size={17} color="currentColor" />
-              <span>{t(item.labelKey)}</span>
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-
-      {/* Trial card (template: gradient border + progress bar + Select plan) */}
-      <div className="p-3">
-        <div
-          className="rounded-2xl border border-border p-[14px]"
-          style={{ background: 'linear-gradient(160deg, var(--color-accent-soft), transparent)' }}
-        >
-          <span className="w-8 h-8 rounded-lg bg-bg-card border border-border-strong flex items-center justify-center">
-            <BrandLogo size={15} />
-          </span>
-          <div className="text-[14px] font-semibold leading-tight mt-3 text-text">Free Trial Version</div>
-          <div className="h-[5px] rounded-full bg-border-strong mt-2.5 overflow-hidden">
-            <div
-              className="h-full bg-accent rounded-full transition-all"
-              style={{ width: '42%' }}
-            />
-          </div>
-          <div className="text-tmpl-body-sm text-text-muted leading-[1.45] mt-2.5">
-            {t('sidebar.trial_body', { days: 4 })}
-          </div>
-          <button
-            onClick={() => navigate('/settings/billing')}
-            className="flex items-center gap-1.5 bg-transparent border-none p-0 mt-2.5 text-text text-tmpl-body-sm font-semibold cursor-pointer hover:opacity-80"
-          >
-            {t('sidebar.trial_cta')}
-            <ArrowRight size={13} />
-          </button>
-        </div>
-      </div>
-
-      {/* Profile button (template: gradient avatar + name + chevron double) */}
-      <div className="px-3 pb-3 pt-1.5">
+      {/* Profile switcher (template: btn com avatar 30x30 + nome 19px/700/-.01em + ChevronsUpDown) */}
+      <div className="relative mb-[26px]">
         <button
-          onClick={() => navigate('/settings/profile')}
-          className="flex items-center gap-2.5 w-full bg-bg-card border border-border rounded-xl py-2 px-[11px] hover:bg-bg-hover transition-colors"
+          onClick={() => navigate('/settings/profiles')}
+          className="flex items-center gap-[10px] py-[6px] px-2 rounded-[10px] cursor-pointer w-full text-left hover:bg-bg transition-colors"
         >
+          {/* Avatar 30x30 com gradient + inner shadow + zap branco */}
+          <div
+            className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center shrink-0"
+            style={{
+              background: 'linear-gradient(150deg, #3a3a40, #161618)',
+              boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.18)'
+            }}
+          >
+            <Zap size={16} strokeWidth={0} fill="#fff" />
+          </div>
           <span
-            className="w-7 h-7 rounded-full shrink-0"
-            style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))' }}
-          />
-          <span className="text-tmpl-body-sm font-semibold flex-1 text-left text-text">
-            {active?.name ?? 'Victor Vignal'}
+            className="text-[19px] font-bold tracking-[-.01em] flex-1 min-w-0 truncate"
+            style={{ color: '#fff' }}
+          >
+            {active?.name ?? t('profile.default_name')}
           </span>
-          <ChevronDoubleDown size={14} color="var(--color-text-subtle)" />
+          <ChevronsUpDown size={16} color="#6a6a70" />
         </button>
       </div>
 
-      {/* ProfileSwitcher modal trigger (hidden, used by Topbar button via store) */}
-      {/* (removido: o trigger estÃ¡ acima da sidebar, no header) */}
+      {/* Main Menu heading (12px/500) */}
+      <div className="flex items-center gap-[5px] px-2 mb-2" style={{ color: '#6a6a70' }}>
+        <span className="text-[12px] font-medium">{t('sidebar.main_menu')}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+
+      <nav className="flex flex-col gap-[1px]">
+        {MAIN_MENU.map((item) => (
+          <SidebarItem key={item.path} item={item} t={t} />
+        ))}
+      </nav>
+
+      {/* Itens legados permitidos pelo perfil (default = vazio) */}
+      {allowedLegacy.length > 0 && (
+        <>
+          <div className="flex items-center gap-[5px] px-2 mt-[18px] mb-2" style={{ color: '#6a6a70' }}>
+            <span className="text-[12px] font-medium">{t('sidebar.legacy')}</span>
+          </div>
+          <nav className="flex flex-col gap-[1px]">
+            {allowedLegacy.map((path) => {
+              const item = LEGACY_PATH_MAP[path]
+              return <SidebarItem key={path} item={item} t={t} />
+            })}
+          </nav>
+        </>
+      )}
+
+      {/* General heading (12px/500) */}
+      <div className="flex items-center gap-[5px] px-2 mt-[18px] mb-2" style={{ color: '#6a6a70' }}>
+        <span className="text-[12px] font-medium">{t('sidebar.general')}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+
+      <nav className="flex flex-col gap-[1px]">
+        {GENERAL.map((item) => (
+          <SidebarItem key={item.path} item={item} t={t} />
+        ))}
+      </nav>
+
+      {/* Trial card — gradient 165deg + border #232327 + border-radius 14px */}
+      <div className="mt-auto relative overflow-hidden p-4 rounded-[14px] border border-[#232327]"
+        style={{ background: 'linear-gradient(165deg, #161619, #101012)' }}>
+        <div
+          className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center mb-[14px]"
+          style={{ background: '#202024' }}
+        >
+          <Zap size={18} strokeWidth={0} fill="#cbd5e1" />
+        </div>
+        <div className="text-[15px] font-semibold mb-[10px]" style={{ color: '#f4f4f6' }}>
+          Free Trial Version
+        </div>
+        <div className="h-[5px] rounded-[3px] overflow-hidden mb-[10px]" style={{ background: '#26262a' }}>
+          <div
+            className="h-full rounded-[3px]"
+            style={{ width: '62%', background: '#6b6b72' }}
+          />
+        </div>
+        <div className="text-[12px] leading-[1.45] mb-[13px]" style={{ color: '#86868d' }}>
+          {t('sidebar.trial_body', { days: 4 })}
+        </div>
+        <div className="flex items-center gap-[6px] text-[13px] font-medium cursor-pointer" style={{ color: '#e8e8ea' }}>
+          {t('sidebar.trial_cta')}
+          <ChevronRight size={14} />
+        </div>
+      </div>
+
+      {/* User button — avatar 34x34 gradient azul + nome + email + chevrons */}
+      <div
+        className="flex items-center gap-[10px] mt-3 px-2 py-2 rounded-[12px] cursor-pointer hover:bg-bg transition-colors"
+        style={{ border: '1px solid #1d1d20' }}
+        onClick={() => navigate('/settings/profile')}
+      >
+        <div
+          className="w-[34px] h-[34px] rounded-full shrink-0"
+          style={{ background: 'linear-gradient(135deg, #5b6b8c, #2c3447)' }}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-semibold truncate" style={{ color: '#f0f0f2' }}>
+            Nero Design
+          </div>
+          <div
+            className="text-[11px] truncate"
+            style={{ color: '#7a7a80' }}
+          >
+            neroodesigner@gmail.com
+          </div>
+        </div>
+        <ChevronsUpDown size={16} color="#6a6a70" />
+      </div>
     </aside>
   )
 }

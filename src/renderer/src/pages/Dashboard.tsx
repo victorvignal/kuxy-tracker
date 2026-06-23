@@ -1,76 +1,73 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
 import {
-  IconBalance,
-  IconSavings,
-  IconTrendUpAccent,
-  IconTrendUp,
-  IconReceipt,
-  IconGridAccent,
-  IconMoreDots,
+  Wallet,
+  PiggyBank,
+  TrendingUp,
+  Receipt,
+  LayoutGrid,
+  MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  IconExport,
-  ChevronDown
-} from '../components/template-icons/TemplateIcon'
-import { useFinanceData } from '../hooks/useFinanceData'
-import { fmtBRL } from '../lib/format'
+  Upload,
+  ChevronDown,
+  type LucideIcon
+} from 'lucide-react'
+// (não usa fmtBRL — valores são fixos pra comparar com template)
 
 /**
  * Dashboard Pessoal — réplica 1:1 do template
- * (C:\Users\vigna\Downloads\design\Dashboard.dc.html).
+ * (C:\Users\vigna\Downloads\design\Tempo Dashboard.dc.html).
  *
- * Componentes (na ordem do template):
+ * Os valores mostrados são FIXOS/aleatórios (não puxam do Finance module)
+ * pra permitir comparação direta com o template durante a iteração de design.
+ * Quando o design estiver aprovado, reconecto com useFinanceData.
+ *
+ * Estrutura (na ordem do template):
  *  - Filter row (30 Days / 3 Months / 1 Year tabs + Export + New ▾)
- *  - Stat cards 4x1: Monthly Balance / Total Savings / Monthly Income / Monthly Expenses
- *  - Middle row: Balance Flow (1.65fr) + Spending Breakdown (1fr)
- *  - Contacts table (8 rows seed)
- *
- * Stats derivam do módulo Finance (accounts + transactions do mês selecionado).
- * Outros perfis (Profissional) podem ter um dashboard alternativo no futuro.
+ *  - Stat cards 4x1 (Monthly Balance / Total Savings / Monthly Income / Monthly Expenses)
+ *  - Middle row: Revenue Flow (flex:1) + Spending Breakdown (width: 310px)
+ *  - Contacts table
  */
 
-// ---- Balance Flow chart: gera linePath + areaPath a partir de dados reais ----
-function useFlowChart(values: number[]) {
-  return useMemo(() => {
-    const W = 400
-    const H = 150
-    const pad = 12
-    const max = Math.max(...values, 1)
-    const n = values.length
-    const pts = values.map((v, i) => [
-      +(pad + (i / Math.max(1, n - 1)) * (W - 2 * pad)).toFixed(1),
-      +(H - pad - (v / max) * (H - 2 * pad)).toFixed(1)
-    ])
-    const linePath = 'M ' + pts.map((p) => p[0] + ' ' + p[1]).join(' L ')
-    const last = pts[n - 1] ?? [pad, H - pad]
-    const areaPath = linePath + ` L ${last[0]} ${H} L ${pts[0]?.[0] ?? pad} ${H} Z`
-    return { linePath, areaPath, dotX: last[0], dotY: last[1] }
-  }, [values])
+const TEST_VALUES = {
+  monthlyBalance: { value: 'R$ 9.999', delta: '+12% (R$ 1.080)' },
+  totalSavings: { value: 'R$ 14.999', delta: '+8% (R$ 1.110)' },
+  monthlyIncome: { value: 'R$ 7.499', delta: '+5% (R$ 357)' },
+  monthlyExpenses: { value: 'R$ 3.299', delta: '-3% (R$ 102)' },
+  revenueTotal: 'R$ 49.999',
+  revenueSub: 'Total Balance',
+  revenueChange: '+12% (R$ 5.454)',
+  insightTitle: 'Savings Goal On Track!',
+  insightText: 'You saved 32% of your income this month, exceeding the 25% target.',
+  donutTotal: '7.299',
+  donutItems: [
+    { label: 'Housing', value: '3.200', color: '#8b5cf6' },
+    { label: 'Food', value: '1.850', color: '#6d4ee0' },
+    { label: 'Transport', value: '1.250', color: '#a78bfa' },
+    { label: 'Health', value: '999', color: '#4f4193' }
+  ]
 }
 
-// ---- Donut chart: 4 segmentos de categorias de despesa ----
-function Donut({
-  segments
-}: {
-  segments: { label: string; val: number; valLabel: string; color: string }[]
-}) {
-  const r = 45
-  const circ = +(2 * Math.PI * r).toFixed(2)
-  const total = segments.reduce((a, s) => a + s.val, 0) || 1
+// ---- Donut chart: 4 segmentos hardcoded do template (valores reais acima) ----
+function Donut({ segments }: { segments: typeof TEST_VALUES.donutItems }) {
+  const r = 46
+  const circ = +(2 * Math.PI * r).toFixed(2) // ~289.03
+  const total = segments.reduce((acc, s) => acc + parseFloat(s.value.replace(/\./g, '')), 0)
   let acc = 0
   return (
-    <svg viewBox="0 0 120 120" style={{ width: 128, height: 128, transform: 'rotate(-90deg)' }}>
-      <circle cx="60" cy="60" r={r} fill="none" stroke="var(--color-bg-hover)" strokeWidth="13" />
+    <svg viewBox="0 0 120 120" style={{ width: 110, height: 110, transform: 'rotate(-90deg)' }}>
       {segments.map((s, i) => {
-        const frac = s.val / total
+        const val = parseFloat(s.value.replace(/\./g, ''))
+        const frac = val / total
         const dash = frac * circ
         const seg = {
           dasharray: `${dash.toFixed(2)} ${(circ - dash).toFixed(2)}`,
           offset: (-acc * circ).toFixed(2)
         }
         acc += frac
+        void i
         return (
           <circle
             key={i}
@@ -79,7 +76,7 @@ function Donut({
             r={r}
             fill="none"
             stroke={s.color}
-            strokeWidth="13"
+            strokeWidth="14"
             strokeDasharray={seg.dasharray}
             strokeDashoffset={seg.offset}
           />
@@ -89,36 +86,40 @@ function Donut({
   )
 }
 
-// ---- Stat card (template: 34x34 icon + label + valor 30px + delta) ----
+// ---- Stat card (template: 22px valor / 13px label) ----
 function StatCard({
   Icon,
   label,
   value,
   delta,
-  deltaPositive
+  positive
 }: {
-  Icon: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>
+  Icon: LucideIcon
   label: string
   value: string
   delta: string
-  deltaPositive: boolean
+  positive: boolean
 }) {
-  const t = useT()
   return (
-    <div className="bg-bg-card border border-border rounded-2xl p-5 shadow-card">
-      <span className="w-[34px] h-[34px] rounded-lg bg-bg-hover border border-border flex items-center justify-center">
-        <Icon size={16} color="var(--color-text-muted)" />
-      </span>
-      <div className="text-tmpl-body text-text-muted mt-4">{label}</div>
-      <div className="text-tmpl-stat-value mt-1.5">{value}</div>
-      <div className="text-tmpl-label mt-2">
-        <span
-          className="font-semibold"
-          style={{ color: deltaPositive ? 'var(--color-success)' : 'var(--color-danger)' }}
-        >
-          {delta}
-        </span>
-        <span className="text-text-subtle"> · {t('dashboard.last_30_days')}</span>
+    <div
+      className="flex-1 rounded-[14px] p-[18px]"
+      style={{ background: '#141416', border: '1px solid #1f1f22' }}
+    >
+      <div className="mb-[14px]">
+        <Icon size={18} color="#86868d" strokeWidth={1.75} />
+      </div>
+      <div className="text-[13px] mb-[6px]" style={{ color: '#86868d' }}>
+        {label}
+      </div>
+      <div
+        className="text-[22px] font-bold mb-[9px]"
+        style={{ color: '#f4f4f6' }}
+      >
+        {value}
+      </div>
+      <div className="text-[12px]" style={{ color: '#7a7a80' }}>
+        <span style={{ color: positive ? '#4ade80' : '#f87171', fontWeight: 600 }}>{delta}</span>
+        {' · Last 30 Days'}
       </div>
     </div>
   )
@@ -127,115 +128,9 @@ function StatCard({
 export function Dashboard() {
   const t = useT()
   const active = useProfileStore((s) => s.getActive())
-  const [period, setPeriod] = useState<0 | 1 | 2>(0) // 0=30d, 1=90d, 2=365d
+  const [period, setPeriod] = useState<0 | 1 | 2>(0)
 
-  // Dados financeiros reais (do módulo Finance já existente)
-  const { accounts, transactions, categories } = useFinanceData()
-
-  // Stats derivados
-  const stats = useMemo(() => {
-    const now = Date.now()
-    const days = period === 0 ? 30 : period === 1 ? 90 : 365
-    const cutoff = now - days * 24 * 60 * 60 * 1000
-    const recent = transactions.filter((tx) => new Date(tx.date).getTime() >= cutoff)
-
-    const totalSavings = accounts
-      .filter((a) => a.type === 'savings' || a.type === 'investment')
-      .reduce((sum, a) => sum + (a.balance ?? 0), 0)
-
-    const income = recent
-      .filter((tx) => tx.type === 'income')
-      .reduce((sum, tx) => sum + tx.amount, 0)
-    const expense = recent
-      .filter((tx) => tx.type === 'expense')
-      .reduce((sum, tx) => sum + tx.amount, 0)
-    const monthlyBalance = income - expense
-
-    // Delta % vs período anterior (mesma duração, antes do cutoff)
-    const prevCutoff = cutoff - days * 24 * 60 * 60 * 1000
-    const prev = transactions.filter(
-      (tx) =>
-        new Date(tx.date).getTime() >= prevCutoff && new Date(tx.date).getTime() < cutoff
-    )
-    const prevIncome = prev.filter((tx) => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0)
-    const prevExpense = prev.filter((tx) => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0)
-    const prevBalance = prevIncome - prevExpense
-
-    const pct = (curr: number, prev: number) =>
-      prev === 0 ? (curr > 0 ? 100 : 0) : Math.round(((curr - prev) / Math.abs(prev)) * 100)
-    const balanceDelta = pct(monthlyBalance, prevBalance)
-    const incomeDelta = pct(income, prevIncome)
-    const expenseDelta = pct(expense, prevExpense)
-    const savingsDelta = pct(totalSavings, totalSavings - monthlyBalance * 0.1) // approximation
-
-    return {
-      monthlyBalance,
-      totalSavings,
-      income,
-      expense,
-      balanceDelta,
-      incomeDelta,
-      expenseDelta,
-      savingsDelta
-    }
-  }, [accounts, transactions, period])
-
-  // Balance flow: gera valores diários a partir das transações
-  const flowValues = useMemo(() => {
-    const days = period === 0 ? 30 : period === 1 ? 90 : 365
-    const slice = Math.min(days, 16) // mantém resolução do template
-    const now = Date.now()
-    const start = now - days * 24 * 60 * 60 * 1000
-    const buckets: number[] = Array(slice).fill(0)
-    const step = (days * 24 * 60 * 60 * 1000) / slice
-    transactions.forEach((tx) => {
-      const t = new Date(tx.date).getTime()
-      if (t < start) return
-      const idx = Math.min(slice - 1, Math.floor((t - start) / step))
-      buckets[idx] += tx.type === 'income' ? tx.amount : -tx.amount
-    })
-    // cumulativo
-    const acc: number[] = []
-    let run = 0
-    buckets.forEach((v) => {
-      run += v
-      acc.push(Math.max(0, run / 100))
-    })
-    return acc
-  }, [transactions, period])
-
-  const flow = useFlowChart(flowValues)
-
-  // Spending breakdown: top 4 categorias de despesa no período
-  const spending = useMemo(() => {
-    const days = period === 0 ? 30 : period === 1 ? 90 : 365
-    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
-    const map: Record<number, number> = {}
-    transactions.forEach((tx) => {
-      if (tx.type !== 'expense') return
-      if (tx.categoryId == null) return
-      if (new Date(tx.date).getTime() < cutoff) return
-      map[tx.categoryId] = (map[tx.categoryId] ?? 0) + tx.amount
-    })
-    const sorted = Object.entries(map)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
-    const palette = ['var(--color-accent)', 'var(--color-accent-light)', 'var(--color-accent-dark)', '#4f4193']
-    return sorted.map(([catId, val], i) => {
-      const cat = categories.find((c) => c.id === Number(catId))
-      return {
-        label: cat?.name ?? `Cat ${catId}`,
-        val,
-        valLabel: val.toLocaleString('pt-BR'),
-        color: cat?.color ?? palette[i]
-      }
-    })
-  }, [transactions, categories, period])
-
-  const spendingTotal = spending.reduce((a, s) => a + s.val, 0)
-  const periodLabels = [t('period.30d'), t('period.90d'), t('period.1y')]
-
-  // Se for perfil Profissional, mostra placeholder (template só cobre Pessoal)
+  // Se for perfil Profissional, mostra placeholder simples
   if (active?.type === 'professional') {
     return (
       <div className="flex-1 flex items-center justify-center p-12">
@@ -248,195 +143,336 @@ export function Dashboard() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-bg">
-      {/* Filter row */}
-      <div className="flex items-center gap-[14px] px-7 pt-6">
-        <div className="flex gap-0.5 bg-bg-card border border-border rounded-[11px] p-1">
-          {periodLabels.map((label, i) => (
+    <div
+      className="flex-1 overflow-y-auto"
+      style={{ background: 'var(--color-bg)' }}
+    >
+      <div className="px-6 pt-[18px] pb-6">
+        {/* Filter row */}
+        <div className="flex items-center justify-between mb-[18px]">
+          <div
+            className="flex rounded-[9px] p-[3px]"
+            style={{ background: '#121214', border: '1px solid #202023' }}
+          >
+            {(['30 Days', '3 Months', '1 Year'] as const).map((label, i) => (
+              <button
+                key={label}
+                onClick={() => setPeriod(i as 0 | 1 | 2)}
+                className="px-4 py-[7px] rounded-md text-[13px] font-medium transition-colors"
+                style={{
+                  background: period === i ? '#161619' : 'transparent',
+                  color: period === i ? '#f4f4f6' : '#86868d',
+                  fontWeight: period === i ? 600 : 500
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-[10px]">
             <button
-              key={i}
-              onClick={() => setPeriod(i as 0 | 1 | 2)}
-              className={`px-4 py-1.5 rounded-md text-tmpl-body-sm font-medium transition-colors ${
-                period === i
-                  ? 'bg-bg-hover text-text shadow-card'
-                  : 'text-text-muted hover:text-text'
-              }`}
+              className="flex items-center gap-[7px] h-[38px] px-[14px] rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
+              style={{ background: '#161619', border: '1px solid #232327', color: '#e8e8ea' }}
             >
-              {label}
+              <Upload size={16} strokeWidth={1.75} />
+              Export
             </button>
-          ))}
+            <div
+              className="flex items-center h-[38px] rounded-[9px] overflow-hidden"
+              style={{ background: '#161619', border: '1px solid #232327' }}
+            >
+              <button className="px-[14px] h-full text-[13px] font-medium" style={{ color: '#e8e8ea' }}>
+                New
+              </button>
+              <span className="h-full w-px" style={{ background: '#232327' }} />
+              <button className="px-[9px] h-full flex items-center" style={{ color: '#9a9aa0' }}>
+                <ChevronDown size={16} strokeWidth={1.75} />
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex-1" />
-        <button className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] px-[15px] py-[9px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors">
-          <IconExport size={15} />
-          {t('common.export')}
-        </button>
-        <button className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] px-[14px] py-[9px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors">
-          {t('common.new')}
-          <span className="w-px h-4 bg-border" />
-          <ChevronDown size={14} color="var(--color-text-muted)" />
-        </button>
-      </div>
 
-      <div className="flex flex-col gap-5 px-7 pb-10 pt-5 max-w-[1320px]">
         {/* Stat cards 4x1 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex gap-[14px] mb-4">
           <StatCard
-            Icon={IconBalance}
-            label={t('dashboard.monthly_balance')}
-            value={fmtBRL(stats.monthlyBalance)}
-            delta={`${stats.balanceDelta >= 0 ? '+' : ''}${stats.balanceDelta}% (${fmtBRL(stats.monthlyBalance)})`}
-            deltaPositive={stats.balanceDelta >= 0}
+            Icon={Wallet}
+            label="Monthly Balance"
+            value={TEST_VALUES.monthlyBalance.value}
+            delta={TEST_VALUES.monthlyBalance.delta}
+            positive
           />
           <StatCard
-            Icon={IconSavings}
-            label={t('dashboard.total_savings')}
-            value={fmtBRL(stats.totalSavings)}
-            delta={`+${stats.savingsDelta}% (${fmtBRL(stats.totalSavings * 0.1)})`}
-            deltaPositive
+            Icon={PiggyBank}
+            label="Total Savings"
+            value={TEST_VALUES.totalSavings.value}
+            delta={TEST_VALUES.totalSavings.delta}
+            positive
           />
           <StatCard
-            Icon={IconTrendUp}
-            label={t('dashboard.monthly_income')}
-            value={fmtBRL(stats.income)}
-            delta={`${stats.incomeDelta >= 0 ? '+' : ''}${stats.incomeDelta}% (${fmtBRL(stats.income - stats.income * (stats.incomeDelta / 100))})`}
-            deltaPositive={stats.incomeDelta >= 0}
+            Icon={TrendingUp}
+            label="Monthly Income"
+            value={TEST_VALUES.monthlyIncome.value}
+            delta={TEST_VALUES.monthlyIncome.delta}
+            positive
           />
           <StatCard
-            Icon={IconReceipt}
-            label={t('dashboard.monthly_expenses')}
-            value={fmtBRL(stats.expense)}
-            delta={`${stats.expenseDelta >= 0 ? '+' : ''}${stats.expenseDelta}% (${fmtBRL(stats.expense - stats.expense * (stats.expenseDelta / 100))})`}
-            deltaPositive={stats.expenseDelta <= 0}
+            Icon={Receipt}
+            label="Monthly Expenses"
+            value={TEST_VALUES.monthlyExpenses.value}
+            delta={TEST_VALUES.monthlyExpenses.delta}
+            positive={false}
           />
         </div>
 
-        {/* Middle row: Balance Flow + Spending Breakdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.65fr_1fr] gap-5">
-          {/* Balance Flow */}
-          <div className="bg-bg-card border border-border rounded-2xl p-[22px] shadow-card">
-            <div className="flex items-center justify-between">
+        {/* Middle row: Revenue Flow + Spending Breakdown */}
+        <div className="flex gap-4 mb-4">
+          {/* Revenue Flow — flex:1 */}
+          <div
+            className="flex-1 rounded-[14px] p-[18px]"
+            style={{ background: '#141416', border: '1px solid #1f1f22' }}
+          >
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <IconTrendUpAccent size={18} />
-                <span className="text-tmpl-title-sm">{t('dashboard.balance_flow')}</span>
+                <TrendingUp size={18} color="#4ade80" strokeWidth={1.75} />
+                <span className="text-[15px] font-semibold" style={{ color: '#f4f4f6' }}>
+                  Revenue Flow
+                </span>
               </div>
-              <IconMoreDots size={18} color="var(--color-text-subtle)" />
+              <MoreHorizontal size={18} color="#6a6a70" />
             </div>
-            <div className="text-tmpl-stat-total mt-3.5">{fmtBRL(stats.totalSavings + stats.monthlyBalance + 30000)}</div>
-            <div className="text-tmpl-body text-text-muted mt-0.5">Total Balance</div>
-            <div className="text-tmpl-label mt-1.5">
-              <span className="text-success font-semibold">+12% (R$ 4.520)</span>{' '}
-              <span className="text-text-subtle">· {t('period.30d')}</span>
-            </div>
+            <div className="flex gap-[18px]">
+              {/* Sub-card Revenue text + Insight */}
+              <div className="w-[188px] shrink-0">
+                <div
+                  className="text-[27px] font-bold tracking-[-.01em]"
+                  style={{ color: '#f4f4f6' }}
+                >
+                  {TEST_VALUES.revenueTotal}
+                </div>
+                <div className="text-[13px] my-[5px]" style={{ color: '#86868d' }}>
+                  {TEST_VALUES.revenueSub}
+                </div>
+                <div className="text-[12px] mb-[18px]" style={{ color: '#7a7a80' }}>
+                  <span className="font-semibold" style={{ color: '#4ade80' }}>
+                    {TEST_VALUES.revenueChange}
+                  </span>
+                  {' · Last 30 Days'}
+                </div>
+                {/* Insight sub-card */}
+                <div
+                  className="rounded-[12px] p-[14px]"
+                  style={{ background: '#1b1b1e', border: '1px solid #26262a' }}
+                >
+                  <div className="text-[13px] font-semibold mb-[6px]" style={{ color: '#f0f0f2' }}>
+                    {TEST_VALUES.insightTitle}
+                  </div>
+                  <div
+                    className="text-[11.5px] leading-[1.5] mb-4"
+                    style={{ color: '#86868d' }}
+                  >
+                    {TEST_VALUES.insightText}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    {/* Dots slider */}
+                    <div className="flex items-center gap-[5px]">
+                      <span className="w-4 h-[3px] rounded-[2px]" style={{ background: '#7a7a80' }} />
+                      <span className="w-2 h-[3px] rounded-[2px]" style={{ background: '#3a3a3e' }} />
+                      <span className="w-2 h-[3px] rounded-[2px]" style={{ background: '#3a3a3e' }} />
+                    </div>
+                    {/* Prev/Next buttons */}
+                    <div className="flex gap-[6px]">
+                      <span
+                        className="w-6 h-6 rounded-full border flex items-center justify-center"
+                        style={{ borderColor: '#2e2e32', color: '#9a9aa0' }}
+                      >
+                        <ChevronLeft size={14} />
+                      </span>
+                      <span
+                        className="w-6 h-6 rounded-full border flex items-center justify-center"
+                        style={{ borderColor: '#2e2e32', color: '#9a9aa0' }}
+                      >
+                        <ChevronRight size={14} />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex flex-wrap gap-[18px] items-end mt-4">
-              {/* sub-card Savings Goal */}
-              <div className="flex-1 min-w-[190px] max-w-[220px] bg-bg border border-border rounded-[13px] p-4">
-                <div className="text-[14px] font-semibold leading-tight">{t('dashboard.savings_goal_title')}</div>
-                <div className="text-tmpl-label text-text-muted leading-[1.5] mt-2">
-                  {t('dashboard.savings_goal_body')}
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <div className="flex gap-1 items-center">
-                    <span className="w-[18px] h-1 rounded-full bg-accent" />
-                    <span className="w-1.5 h-1 rounded-full bg-border-strong" />
-                    <span className="w-1.5 h-1 rounded-full bg-border-strong" />
-                  </div>
-                  <div className="flex gap-1.5">
-                    <button className="w-7 h-7 rounded-full border border-border bg-bg-card flex items-center justify-center hover:bg-bg-hover">
-                      <ChevronLeft size={13} color="var(--color-text-muted)" />
-                    </button>
-                    <button className="w-7 h-7 rounded-full border border-border bg-bg-card flex items-center justify-center hover:bg-bg-hover">
-                      <ChevronRight size={13} color="var(--color-text-muted)" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {/* Chart */}
-              <div className="flex-1 min-w-[220px]">
-                <svg viewBox="0 0 400 150" preserveAspectRatio="none" style={{ width: '100%', height: 150, display: 'block', overflow: 'visible' }}>
+              {/* Chart SVG (template: viewBox 460x200) */}
+              <div className="flex-1 min-w-0">
+                <svg viewBox="0 0 460 200" style={{ width: '100%', height: 200, display: 'block' }} preserveAspectRatio="none">
                   <defs>
-                    <linearGradient id="flowfill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.45" />
-                      <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
+                    <linearGradient id="rf" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.28" />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
                     </linearGradient>
                   </defs>
-                  <path d={flow.areaPath} fill="url(#flowfill)" />
+                  {/* Grid lines horizontais */}
+                  <g stroke="#1c1c1f" strokeWidth="1">
+                    <line x1="40" y1="24" x2="452" y2="24" />
+                    <line x1="40" y1="62" x2="452" y2="62" />
+                    <line x1="40" y1="100" x2="452" y2="100" />
+                    <line x1="40" y1="138" x2="452" y2="138" />
+                    <line x1="40" y1="172" x2="452" y2="172" />
+                  </g>
+                  {/* Area fill */}
                   <path
-                    d={flow.linePath}
+                    d="M45,150 L75,140 L100,148 L125,120 L150,130 L175,100 L200,112 L225,95 L255,105 L280,78 L300,92 L320,70 L345,82 L365,55 L390,68 L415,40 L445,30 L445,172 L45,172 Z"
+                    fill="url(#rf)"
+                  />
+                  {/* Line */}
+                  <path
+                    d="M45,150 L75,140 L100,148 L125,120 L150,130 L175,100 L200,112 L225,95 L255,105 L280,78 L300,92 L320,70 L345,82 L365,55 L390,68 L415,40 L445,30"
                     fill="none"
-                    stroke="var(--color-accent)"
-                    strokeWidth="2.4"
+                    stroke="#8b5cf6"
+                    strokeWidth="2"
                     strokeLinejoin="round"
                     strokeLinecap="round"
-                    vectorEffect="non-scaling-stroke"
                   />
-                  <line
-                    x1={flow.dotX}
-                    y1="0"
-                    x2={flow.dotX}
-                    y2="150"
-                    stroke="var(--color-border-strong)"
-                    strokeWidth="1"
-                    strokeDasharray="3 3"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                  <circle
-                    cx={flow.dotX}
-                    cy={flow.dotY}
-                    r="4.5"
-                    fill="var(--color-accent)"
-                    stroke="var(--color-bg-card)"
-                    strokeWidth="2.5"
-                  />
+                  {/* Dot indicator + dashed vertical line */}
+                  <line x1="300" y1="78" x2="300" y2="172" stroke="#6b6b72" strokeWidth="1" strokeDasharray="3 3" />
+                  <circle cx="300" cy="92" r="4.5" fill="#0a0a0b" stroke="#8b5cf6" strokeWidth="2.5" />
                 </svg>
               </div>
             </div>
           </div>
 
-          {/* Spending Breakdown */}
-          <div className="bg-bg-card border border-border rounded-2xl p-[22px] shadow-card flex flex-col">
-            <div className="flex items-center gap-2">
-              <IconGridAccent size={18} />
-              <span className="text-tmpl-title-sm">{t('dashboard.spending_breakdown')}</span>
+          {/* Spending Breakdown — width 310px */}
+          <div
+            className="shrink-0 rounded-[14px] p-[18px] flex flex-col"
+            style={{ width: 310, background: '#141416', border: '1px solid #1f1f22' }}
+          >
+            <div className="flex items-center justify-between mb-[18px]">
+              <div className="flex items-center gap-2">
+                <LayoutGrid size={16} color="#a78bfa" />
+                <span className="text-[15px] font-semibold" style={{ color: '#f4f4f6' }}>
+                  Spending Breakdown
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-5 mt-4 flex-1">
-              <div className="relative w-[128px] h-[128px] shrink-0">
-                <Donut segments={spending} />
+            <div className="flex items-center gap-5 mb-5">
+              <div className="relative w-[110px] h-[110px] shrink-0">
+                <Donut segments={TEST_VALUES.donutItems} />
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="text-2xl font-bold tracking-tight">{spendingTotal.toLocaleString('pt-BR')}</div>
-                  <div className="text-tmpl-micro-xs text-text-muted">{t('dashboard.total_spent')}</div>
+                  <div className="text-[21px] font-bold leading-none" style={{ color: '#f4f4f6' }}>
+                    {TEST_VALUES.donutTotal}
+                  </div>
+                  <div className="text-[9px] mt-[2px]" style={{ color: '#86868d' }}>
+                    Total Spent
+                  </div>
                 </div>
               </div>
               <div className="flex-1 flex flex-col gap-3">
-                {spending.length === 0 ? (
-                  <div className="text-xs text-text-subtle">{t('dashboard.no_spending_data')}</div>
-                ) : (
-                  spending.map((s, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span
-                        className="w-[3px] h-[18px] rounded-full shrink-0"
-                        style={{ background: s.color }}
-                      />
-                      <span className="text-tmpl-body-sm text-text-muted flex-1">{s.label}</span>
-                      <span className="text-tmpl-body font-semibold">{s.valLabel}</span>
-                    </div>
-                  ))
-                )}
+                {TEST_VALUES.donutItems.map((d, i) => (
+                  <div key={i} className="flex items-center gap-[9px]">
+                    <span className="w-[3px] h-[14px] rounded-[2px] shrink-0" style={{ background: d.color }} />
+                    <span className="flex-1 text-[12px]" style={{ color: '#b8b8be' }}>
+                      {d.label}
+                    </span>
+                    <span className="text-[12px] font-bold" style={{ color: '#f4f4f6' }}>
+                      {d.value}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <button className="flex items-center justify-center gap-2 w-full bg-bg border border-border rounded-[11px] py-[11px] mt-[18px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors">
-              {t('dashboard.more_details')}
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
+            <button
+              className="mt-auto flex items-center justify-center gap-2 h-10 rounded-[10px] text-[13px] font-medium transition-colors hover:opacity-90"
+              style={{ background: '#161619', border: '1px solid #232327', color: '#e8e8ea' }}
+            >
+              More details
+              <ChevronRight size={16} strokeWidth={1.75} />
             </button>
           </div>
         </div>
+
+        {/* Contacts table — placeholder visual (Contacts.tsx separado) */}
+        <ContactsTable />
       </div>
+    </div>
+  )
+}
+
+function ContactsTable() {
+  const rows = [
+    { id: '001', name: 'Maria Silva', av: '#f472b6', email: 'maria@gmail.com', status: 'Active', stBg: 'rgba(74,222,128,0.12)', stFg: '#4ade80', date: '2025-06-01', source: 'Family', srcColor: '#a78bfa' },
+    { id: '002', name: 'João Santos', av: '#60a5fa', email: 'joao.s@gmail.com', status: 'Active', stBg: 'rgba(74,222,128,0.12)', stFg: '#4ade80', date: '2025-05-22', source: 'Friend', srcColor: '#a78bfa' },
+    { id: '003', name: 'Ana Costa', av: '#a78bfa', email: 'ana.costa@outlook.com', status: 'Pending', stBg: 'rgba(250,204,21,0.12)', stFg: '#facc15', date: '2025-04-15', source: 'Work', srcColor: '#a78bfa' },
+    { id: '004', name: 'Pedro Lima', av: '#34d399', email: 'pedro.lima@gmail.com', status: 'Active', stBg: 'rgba(74,222,128,0.12)', stFg: '#4ade80', date: '2025-04-02', source: 'Family', srcColor: '#a78bfa' },
+    { id: '005', name: 'Carla Souza', av: '#fbbf24', email: 'carla.souza@hotmail.com', status: 'Inactive', stBg: 'rgba(122,122,128,0.12)', stFg: '#7a7a80', date: '2025-03-20', source: 'Work', srcColor: '#a78bfa' },
+    { id: '006', name: 'Lucas Rocha', av: '#22d3ee', email: 'lucas.r@gmail.com', status: 'Active', stBg: 'rgba(74,222,128,0.12)', stFg: '#4ade80', date: '2025-03-11', source: 'Friend', srcColor: '#a78bfa' }
+  ]
+
+  return (
+    <div
+      className="rounded-[14px] p-[18px]"
+      style={{ background: '#141416', border: '1px solid #1f1f22' }}
+    >
+      <div className="text-[15px] font-semibold mb-[14px]" style={{ color: '#f4f4f6' }}>
+        6 Personal Contacts
+      </div>
+
+      {/* Header row */}
+      <div
+        className="flex items-center px-[6px] pb-[11px]"
+        style={{ borderBottom: '1px solid #1d1d20', color: '#7a7a80', fontSize: '12px', fontWeight: 500 }}
+      >
+        <div className="w-[30px] shrink-0">
+          <span
+            className="inline-block w-[15px] h-[15px] rounded-[4px]"
+            style={{ border: '1.5px solid #3a3a3e' }}
+          />
+        </div>
+        <div className="w-[80px] shrink-0">ID</div>
+        <div className="flex-1">Name</div>
+        <div style={{ flex: 1.3 }}>Email</div>
+        <div className="w-[100px] shrink-0">Status</div>
+        <div className="w-[110px] shrink-0">Date</div>
+        <div className="w-[100px] shrink-0">Source</div>
+      </div>
+
+      {/* Rows */}
+      {rows.map((r) => (
+        <div
+          key={r.id}
+          className="flex items-center px-[6px] py-[11px] hover:opacity-90 transition-colors"
+          style={{ borderBottom: '1px solid #161618', fontSize: '13px', color: '#e8e8ea' }}
+        >
+          <div className="w-[30px] shrink-0">
+            <span
+              className="inline-block w-[15px] h-[15px] rounded-[4px]"
+              style={{ border: '1.5px solid #3a3a3e' }}
+            />
+          </div>
+          <div className="w-[80px] shrink-0" style={{ color: '#9a9aa0' }}>
+            {r.id}
+          </div>
+          <div className="flex-1 flex items-center gap-[9px]">
+            <span
+              className="w-6 h-6 rounded-full shrink-0"
+              style={{ background: r.av }}
+            />
+            {r.name}
+          </div>
+          <div style={{ flex: 1.3, color: '#9a9aa0' }}>{r.email}</div>
+          <div className="w-[100px] shrink-0">
+            <span
+              className="inline-block py-[3px] px-[10px] rounded-[6px]"
+              style={{ fontSize: '11.5px', fontWeight: 500, background: r.stBg, color: r.stFg }}
+            >
+              {r.status}
+            </span>
+          </div>
+          <div className="w-[110px] shrink-0" style={{ color: '#b8b8be' }}>
+            {r.date}
+          </div>
+          <div className="w-[100px] shrink-0" style={{ fontSize: '12.5px', fontWeight: 500, color: r.srcColor }}>
+            {r.source}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
