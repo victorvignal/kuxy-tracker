@@ -1,167 +1,239 @@
-import { NavLink } from 'react-router-dom'
-import {
-  LayoutDashboard,
-  Target,
-  Layers,
-  Calendar as CalendarIcon,
-  BarChart3,
-  BookOpen,
-  Timer,
-  Flag,
-  CircleDollarSign,
-  Briefcase,
-  Settings as SettingsIcon,
-  Search,
-  Lightbulb
-} from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useProfileStore } from '../../store/useProfile'
 import { useT } from '../../lib/i18n'
 import { ProfileSwitcher } from './ProfileSwitcher'
+import {
+  BrandLogo,
+  IconDashboard,
+  IconNotification,
+  IconEarnings,
+  IconSpending,
+  IconSubscriptions,
+  IconReports,
+  IconTransactions,
+  IconPerformance,
+  IconMoreDots,
+  IconSettings,
+  IconHelp,
+  IconFeedback,
+  ChevronDoubleDown,
+  ArrowRight
+} from '../template-icons/TemplateIcon'
 
-const ITEM_ICONS: Record<string, any> = {
-  '/': LayoutDashboard,
-  '/habits': Target,
-  '/routines': Layers,
-  '/calendar': CalendarIcon,
-  '/stats': BarChart3,
-  '/journal': BookOpen,
-  '/focus': Timer,
-  '/goals': Flag,
-  '/finance': CircleDollarSign,
-  '/projects': Briefcase
+type Item = {
+  path: string
+  labelKey: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Icon: any
 }
 
-const KEY_BY_PATH: Record<string, string> = {
-  '/': 'nav.dashboard',
-  '/habits': 'nav.habits',
-  '/routines': 'nav.routines',
-  '/calendar': 'nav.calendar',
-  '/stats': 'nav.stats',
-  '/journal': 'nav.journal',
-  '/focus': 'nav.focus',
-  '/goals': 'nav.goals',
-  '/finance': 'nav.finance',
-  '/projects': 'nav.projects'
+const MAIN_MENU: Item[] = [
+  { path: '/', labelKey: 'nav.dashboard', Icon: IconDashboard },
+  { path: '/notifications', labelKey: 'nav.notifications', Icon: IconNotification },
+  { path: '/earnings', labelKey: 'nav.earnings', Icon: IconEarnings },
+  { path: '/spending', labelKey: 'nav.spending', Icon: IconSpending },
+  { path: '/subscriptions', labelKey: 'nav.subscriptions', Icon: IconSubscriptions },
+  { path: '/reports', labelKey: 'nav.reports', Icon: IconReports },
+  { path: '/transactions', labelKey: 'nav.transactions', Icon: IconTransactions },
+  { path: '/performance', labelKey: 'nav.performance', Icon: IconPerformance },
+  { path: '/more', labelKey: 'nav.more', Icon: IconMoreDots }
+]
+
+const GENERAL: Item[] = [
+  { path: '/settings', labelKey: 'nav.settings', Icon: IconSettings },
+  { path: '/help', labelKey: 'nav.help', Icon: IconHelp },
+  { path: '/feedback', labelKey: 'nav.feedback', Icon: IconFeedback }
+]
+
+// Mapas legado → novo: rotas que existiam no KUXY antigo mas não no template.
+// Mantidas no mapa de paths pra que deep links e bookmarks não quebrem,
+// mas só aparecem se o perfil permitir explicitamente (default = false).
+const LEGACY_PATH_MAP: Record<string, Item> = {
+  '/habits': { path: '/habits', labelKey: 'nav.habits', Icon: IconPerformance },
+  '/routines': { path: '/routines', labelKey: 'nav.routines', Icon: IconPerformance },
+  '/calendar': { path: '/calendar', labelKey: 'nav.calendar', Icon: IconPerformance },
+  '/stats': { path: '/stats', labelKey: 'nav.stats', Icon: IconPerformance },
+  '/journal': { path: '/journal', labelKey: 'nav.journal', Icon: IconPerformance },
+  '/focus': { path: '/focus', labelKey: 'nav.focus', Icon: IconPerformance },
+  '/goals': { path: '/goals', labelKey: 'nav.goals', Icon: IconPerformance },
+  '/finance': { path: '/finance', labelKey: 'nav.finance', Icon: IconSpending },
+  '/projects': { path: '/projects', labelKey: 'nav.projects', Icon: IconPerformance },
+  '/contacts': { path: '/contacts', labelKey: 'nav.contacts', Icon: IconPerformance }
 }
 
 export function Sidebar() {
   const t = useT()
+  const navigate = useNavigate()
   const active = useProfileStore((s) => s.getActive())
 
-  // Itens permitidos pelo perfil ativo. Se nao tem perfil carregado ainda,
-  // mostra a lista completa (vai piscar por ~50ms no primeiro load).
-  const allowed = active?.sidebarItems ?? [
-    '/',
-    '/habits',
-    '/routines',
-    '/calendar',
-    '/stats',
-    '/journal',
-    '/focus',
-    '/goals',
-    '/finance'
-  ]
+  // Itens do template (sidebar nova) + itens legados permitidos pelo perfil.
+  // Default = só os itens do template. Itens antigos ficam disponíveis se o
+  // usuário adicionar via customização de sidebar do perfil.
+  const templatePaths = new Set([...MAIN_MENU.map((i) => i.path), ...GENERAL.map((i) => i.path)])
+  const allowedLegacy =
+    active?.sidebarItems?.filter((p) => !templatePaths.has(p) && LEGACY_PATH_MAP[p]) ?? []
 
   return (
-    <aside className="w-sidebar shrink-0 border-r border-border bg-bg-subtle flex flex-col h-screen">
-      {/* Brand + Profile Switcher + Search */}
-      <div className="px-3 pt-4 pb-3 space-y-3">
-        {/* Brand */}
-        <div className="flex items-center gap-2 px-2">
-          <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center shrink-0">
-            <span className="text-white text-xs font-bold">K</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold tracking-tight leading-tight">
-              {t('app.name')}
-            </div>
-            <div className="text-[10px] text-text-subtle leading-tight mt-0.5">
-              {t('app.tagline')}
-            </div>
-          </div>
-        </div>
-
-        {/* Profile switcher (era no topbar, agora vive aqui) */}
-        <ProfileSwitcher />
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-text-subtle" />
-          <input
-            type="text"
-            placeholder={t('common.search')}
-            className="w-full bg-bg border border-border rounded-lg pl-8 pr-12 py-1.5 text-xs placeholder:text-text-subtle focus:outline-none focus:border-border-strong transition-colors"
-          />
-          <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-text-subtle text-[9px] font-medium">
-            <span className="px-1 py-0.5 rounded border border-border bg-bg-card">⌘</span>
-            <span className="px-1 py-0.5 rounded border border-border bg-bg-card">K</span>
-          </div>
-        </div>
+    <aside
+      className="w-sidebar shrink-0 border-r border-border bg-bg-subtle flex flex-col h-screen"
+      style={{ width: 'var(--sidebar-width)' }}
+    >
+      {/* Brand / Profile switcher (template: 18px 16px 14px padding) */}
+      <div className="px-4 pt-[18px] pb-[14px]">
+        <button
+          onClick={() => navigate('/settings/profiles')}
+          className="flex items-center gap-[11px] w-full bg-transparent hover:bg-bg-hover rounded-md py-1 px-1.5 transition-colors"
+        >
+          <span className="w-[34px] h-[34px] rounded-lg bg-black border border-border-strong flex items-center justify-center shrink-0">
+            <BrandLogo size={17} />
+          </span>
+          <span className="text-base font-bold tracking-tight flex-1 text-left text-text">
+            {active?.name ?? t('profile.default_name')}
+          </span>
+          <ChevronDoubleDown size={15} color="var(--color-text-subtle)" />
+        </button>
       </div>
 
-      {/* Items do perfil + bloco Geral */}
-      <div className="flex-1 px-3 overflow-y-auto space-y-3">
-        <nav className="space-y-0.5">
-          {allowed
-            .filter((path) => ITEM_ICONS[path])
-            .map((path) => {
-              const Icon = ITEM_ICONS[path]
-              const labelKey = KEY_BY_PATH[path]
-              return (
-                <NavLink
-                  key={path}
-                  to={path}
-                  end={path === '/'}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-colors',
-                      isActive
-                        ? 'bg-bg-hover text-text font-medium'
-                        : 'text-text-muted hover:text-text hover:bg-bg-hover/50'
-                    )
-                  }
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{t(labelKey)}</span>
-                </NavLink>
-              )
-            })}
+      {/* Nav scrollable */}
+      <div className="flex-1 overflow-y-auto px-3 pb-2">
+        {/* Main Menu heading */}
+        <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-2 text-text-subtle text-[11px] font-semibold uppercase tracking-wider">
+          <span>{t('sidebar.main_menu')}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+
+        <nav className="flex flex-col gap-0.5">
+          {MAIN_MENU.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.path === '/'}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-[13.5px] font-medium transition-colors',
+                  isActive
+                    ? 'bg-bg-hover text-text'
+                    : 'text-text-muted hover:bg-bg-hover hover:text-text'
+                )
+              }
+            >
+              <item.Icon size={17} color="currentColor" />
+              <span>{t(item.labelKey)}</span>
+            </NavLink>
+          ))}
         </nav>
 
-        <div className="pt-1">
-          <div className="px-2 pb-1 text-[10px] font-medium text-text-subtle uppercase tracking-wider">
-            {t('nav.general')}
+        {/* Itens legados permitidos pelo perfil (default = vazio) */}
+        {allowedLegacy.length > 0 && (
+          <>
+            <div className="flex items-center gap-1.5 px-2 pt-4 pb-2 text-text-subtle text-[11px] font-semibold uppercase tracking-wider">
+              <span>{t('sidebar.legacy')}</span>
+            </div>
+            <nav className="flex flex-col gap-0.5">
+              {allowedLegacy.map((path) => {
+                const item = LEGACY_PATH_MAP[path]
+                return (
+                  <NavLink
+                    key={path}
+                    to={path}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-[13.5px] font-medium transition-colors',
+                        isActive
+                          ? 'bg-bg-hover text-text'
+                          : 'text-text-muted hover:bg-bg-hover hover:text-text'
+                      )
+                    }
+                  >
+                    <item.Icon size={17} color="currentColor" />
+                    <span>{t(item.labelKey)}</span>
+                  </NavLink>
+                )
+              })}
+            </nav>
+          </>
+        )}
+
+        {/* General heading */}
+        <div className="flex items-center gap-1.5 px-2 pt-[18px] pb-2 text-text-subtle text-[11px] font-semibold uppercase tracking-wider">
+          <span>{t('sidebar.general')}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+
+        <nav className="flex flex-col gap-0.5">
+          {GENERAL.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-[13.5px] font-medium transition-colors',
+                  isActive
+                    ? 'bg-bg-hover text-text'
+                    : 'text-text-muted hover:bg-bg-hover hover:text-text'
+                )
+              }
+            >
+              <item.Icon size={17} color="currentColor" />
+              <span>{t(item.labelKey)}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+
+      {/* Trial card (template: gradient border + progress bar + Select plan) */}
+      <div className="p-3">
+        <div
+          className="rounded-2xl border border-border p-[14px]"
+          style={{ background: 'linear-gradient(160deg, var(--color-accent-soft), transparent)' }}
+        >
+          <span className="w-8 h-8 rounded-lg bg-bg-card border border-border-strong flex items-center justify-center">
+            <BrandLogo size={15} />
+          </span>
+          <div className="text-[14px] font-semibold mt-3 text-text">Free Trial Version</div>
+          <div className="h-[5px] rounded-full bg-border-strong mt-2.5 overflow-hidden">
+            <div
+              className="h-full bg-accent rounded-full transition-all"
+              style={{ width: '42%' }}
+            />
           </div>
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-colors',
-                isActive
-                  ? 'bg-bg-hover text-text font-medium'
-                  : 'text-text-muted hover:text-text hover:bg-bg-hover/40'
-              )
-            }
+          <div className="text-xs text-text-muted leading-snug mt-2.5">
+            {t('sidebar.trial_body', { days: 4 })}
+          </div>
+          <button
+            onClick={() => navigate('/settings/billing')}
+            className="flex items-center gap-1.5 bg-transparent border-none p-0 mt-2.5 text-text text-[13px] font-semibold cursor-pointer hover:opacity-80"
           >
-            <SettingsIcon className="w-3.5 h-3.5" />
-            <span>{t('nav.settings')}</span>
-          </NavLink>
+            {t('sidebar.trial_cta')}
+            <ArrowRight size={13} />
+          </button>
         </div>
       </div>
 
-      {/* Bottom: Tip */}
-      <div className="p-3 space-y-2 border-t border-border">
-        <div className="rounded-xl bg-gradient-to-br from-accent/15 to-purple-700/10 border border-accent/20 p-3">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Lightbulb className="w-3 h-3 text-accent" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
-              Tip
-            </span>
-          </div>
-          <p className="text-xs text-text leading-relaxed">{t('sidebar.tip_body')}</p>
-        </div>
+      {/* Profile button (template: gradient avatar + name + chevron double) */}
+      <div className="px-3 pb-3 pt-1.5">
+        <button
+          onClick={() => navigate('/settings/profile')}
+          className="flex items-center gap-2.5 w-full bg-bg-card border border-border rounded-xl py-2 px-[11px] hover:bg-bg-hover transition-colors"
+        >
+          <span
+            className="w-7 h-7 rounded-full shrink-0"
+            style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))' }}
+          />
+          <span className="text-[13px] font-semibold flex-1 text-left text-text">
+            Victor Vignal
+          </span>
+          <ChevronDoubleDown size={14} color="var(--color-text-subtle)" />
+        </button>
       </div>
+
+      {/* ProfileSwitcher modal trigger (hidden, used by Topbar button via store) */}
+      <ProfileSwitcher />
     </aside>
   )
 }

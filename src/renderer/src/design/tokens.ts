@@ -74,22 +74,20 @@ export type Theme = {
   }
 }
 
-// Tema dark (default). Alinhado com o template Tempo (julho/2026):
-// - accent #8b5cf6 (era #a855f7) - mais clean, combina melhor com o template
-// - success/danger/warning alinhados pros tons usados no template
-// - chart palette adicionada pros gráficos do módulo Finance
+// Tema dark (default). Réplica 1:1 do template Pessoal Dashboard
+// (C:\Users\vigna\Downloads\design).
 export const DARK: Theme = {
   name: 'dark',
   colors: {
     bg: '#0a0a0b',
     bgSubtle: '#0c0c0e',
     bgCard: '#141416',
-    bgHover: '#161619',
+    bgHover: '#1a1a1e',
     border: '#1f1f22',
     borderStrong: '#2a2a2e',
     text: '#e8e8ea',
     textMuted: '#86868d',
-    textSubtle: '#5e5e6e',
+    textSubtle: '#5e5e5e',
     accent: '#8b5cf6',
     accentHover: '#7c3aed',
     accentSoft: 'rgba(139, 92, 246, 0.12)',
@@ -106,13 +104,13 @@ export const DARK: Theme = {
     scrim: 'rgba(0, 0, 0, 0.6)'
   },
   radii: {
-    sm: '6px',
-    md: '9px',
-    lg: '12px',
-    xl: '14px'
+    sm: '8px',
+    md: '10px',
+    lg: '13px',
+    xl: '16px'
   },
   spacing: {
-    sidebarWidth: '260px',
+    sidebarWidth: '252px',
     topbarHeight: '56px'
   },
   font: {
@@ -120,7 +118,7 @@ export const DARK: Theme = {
     mono: '"JetBrains Mono", ui-monospace, monospace'
   },
   shadow: {
-    card: '0 1px 0 0 rgba(255, 255, 255, 0.02) inset, 0 0 0 1px rgba(255, 255, 255, 0.04)',
+    card: '0 1px 0 0 rgba(255, 255, 255, 0.02) inset, 0 0 0 1px rgba(255, 255, 255, 0.05)',
     pop: '0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06)'
   }
 }
