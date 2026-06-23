@@ -11,20 +11,17 @@ import { Goals } from './pages/Goals'
 import { Finance } from './pages/Finance'
 import { Projects } from './pages/Projects'
 import { Settings } from './pages/Settings'
-import { Placeholder } from './pages/Placeholder'
 import { Contacts } from './pages/Contacts'
-import {
-  IconNotification,
-  IconEarnings,
-  IconSpending,
-  IconSubscriptions,
-  IconReports,
-  IconTransactions,
-  IconPerformance,
-  IconMoreDots,
-  IconHelp,
-  IconFeedback
-} from './components/template-icons/TemplateIcon'
+import { Transactions } from './pages/Transactions'
+import { Notifications } from './pages/Notifications'
+import { Earnings } from './pages/Earnings'
+import { Spending } from './pages/Spending'
+import { Subscriptions } from './pages/Subscriptions'
+import { Reports } from './pages/Reports'
+import { Performance } from './pages/Performance'
+import { More } from './pages/More'
+import { Help } from './pages/Help'
+import { Feedback } from './pages/Feedback'
 import { ThemeProvider } from './design/ThemeProvider'
 
 export default function App() {
@@ -35,99 +32,19 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
 
           {/* Itens do template Pessoal Dashboard */}
-          <Route
-            path="/notifications"
-            element={
-              <Placeholder
-                titleKey="nav.notifications"
-                Icon={<IconNotification size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
-          <Route
-            path="/earnings"
-            element={
-              <Placeholder
-                titleKey="nav.earnings"
-                Icon={<IconEarnings size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
-          <Route
-            path="/spending"
-            element={
-              <Placeholder
-                titleKey="nav.spending"
-                Icon={<IconSpending size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
-          <Route
-            path="/subscriptions"
-            element={
-              <Placeholder
-                titleKey="nav.subscriptions"
-                Icon={<IconSubscriptions size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <Placeholder
-                titleKey="nav.reports"
-                Icon={<IconReports size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
-          <Route
-            path="/transactions"
-            element={
-              <Placeholder
-                titleKey="nav.transactions"
-                Icon={<IconTransactions size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
-          <Route
-            path="/performance"
-            element={
-              <Placeholder
-                titleKey="nav.performance"
-                Icon={<IconPerformance size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
-          <Route
-            path="/more"
-            element={
-              <Placeholder
-                titleKey="nav.more"
-                Icon={<IconMoreDots size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/earnings" element={<Earnings />} />
+          <Route path="/spending" element={<Spending />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/performance" element={<Performance />} />
+          <Route path="/more" element={<More />} />
           <Route path="/contacts" element={<Contacts />} />
 
           {/* General */}
-          <Route
-            path="/help"
-            element={
-              <Placeholder
-                titleKey="nav.help"
-                Icon={<IconHelp size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
-          <Route
-            path="/feedback"
-            element={
-              <Placeholder
-                titleKey="nav.feedback"
-                Icon={<IconFeedback size={28} color="var(--color-text-muted)" />}
-              />
-            }
-          />
+          <Route path="/help" element={<Help />} />
+          <Route path="/feedback" element={<Feedback />} />
 
           {/* Rotas legadas (mantidas pra não quebrar deep links/breadcrumbs).
               Não aparecem na sidebar por default — só se o usuário adicionar
