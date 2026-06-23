@@ -1,4 +1,4 @@
-export type ProfileType = 'personal' | 'professional' | 'custom'
+﻿export type ProfileType = 'personal' | 'professional' | 'custom'
 
 export interface Profile {
   id: number
@@ -79,6 +79,7 @@ export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'ca
 
 export interface Account {
   id: number
+  profileId?: number
   name: string
   type: AccountType
   balance: number // centavos
@@ -117,6 +118,7 @@ export type SubscriptionInterval = 'monthly' | 'yearly' | 'weekly'
 
 export interface Subscription {
   id: number
+  profileId?: number
   accountId: number | null
   categoryId: number | null
   name: string
@@ -127,6 +129,31 @@ export interface Subscription {
   active: boolean
   notes: string | null
   createdAt: number | Date
+}
+
+export type BudgetPeriod = 'weekly' | 'monthly' | 'yearly'
+export type BudgetStatus = 'ok' | 'warning' | 'exceeded'
+
+export interface Budget {
+  id: number
+  profileId?: number
+  categoryId: number
+  name: string | null
+  amount: number // centavos
+  period: BudgetPeriod
+  rollover: boolean
+  alertThreshold: number // 0-100
+  startDate: string // YYYY-MM-DD
+  archived: boolean
+  createdAt: number | Date
+  updatedAt: number | Date
+  // Computed pelo backend (budgets:list)
+  spent?: number
+  pct?: number
+  daysRemaining?: number
+  status?: BudgetStatus
+  periodFrom?: string
+  periodTo?: string
 }
 
 // ============================================================
@@ -152,7 +179,6 @@ export interface Project {
   googleDriveUrl: string | null
   tiktokUrl: string | null
   notes: string | null
-  archived: boolean
   createdAt: number | Date
   updatedAt: number | Date
 }
