@@ -13,6 +13,7 @@ import {
   Play,
   Repeat
 } from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { rangeStr, todayStr, cn } from '../lib/utils'
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
@@ -426,7 +427,7 @@ export function Finance() {
           )}
         </div>
 
-        {/* Spending breakdown (donut simples sem recharts, só SVG) */}
+        {/* Spending breakdown (recharts donut) */}
         <div className="bg-bg-card border border-border rounded-xl p-4">
           <h2 className="text-sm font-semibold text-text mb-3">{t('finance.spending_breakdown')}</h2>
           {expenseByCategory.length === 0 ? (
@@ -434,32 +435,60 @@ export function Finance() {
               {t('finance.no_transactions')}
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {expenseByCategory.slice(0, 6).map((e) => {
-                const pct = (e.total / totalExpense) * 100
-                return (
-                  <div key={e.catId}>
-                    <div className="flex items-center justify-between mb-1">
+            <div>
+              <div className="h-40 mb-3">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expenseByCategory}
+                      dataKey="total"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      stroke="none"
+                    >
+                      {expenseByCategory.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--color-bg-card)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        color: 'var(--color-text)'
+                      }}
+                      formatter={(value: number) => fmtBRL(value)}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-1.5">
+                {expenseByCategory.slice(0, 6).map((e) => {
+                  const pct = (e.total / totalExpense) * 100
+                  return (
+                    <div key={e.catId} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2 min-w-0">
                         <span
                           className="w-2 h-2 rounded-full shrink-0"
                           style={{ background: e.color }}
                         />
-                        <span className="text-xs text-text truncate">{e.name}</span>
+                        <span className="text-text truncate">{e.name}</span>
                       </div>
-                      <span className="text-xs font-semibold text-text-muted tabular-nums shrink-0 ml-2">
-                        {pct.toFixed(0)}%
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-text-muted tabular-nums">{fmtBRL(e.total)}</span>
+                        <span className="text-text-subtle tabular-nums w-8 text-right">
+                          {pct.toFixed(0)}%
+                        </span>
+                      </div>
                     </div>
-                    <div className="h-1.5 rounded-full bg-bg-subtle overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${pct}%`, background: e.color }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
