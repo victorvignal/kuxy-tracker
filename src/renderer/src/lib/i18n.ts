@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+﻿import { create } from 'zustand'
 
 export type Lang = 'en' | 'pt-BR'
 
@@ -510,6 +510,22 @@ const dicts: Record<Lang, Record<string, string>> = {
     'finance.account.credit': 'Cartão de crédito',
     'finance.account.investment': 'Investimento',
     'finance.account.cash': 'Dinheiro',
+    'finance.accounts.manage': 'Gerenciar contas',
+    'finance.account.new': 'Nova conta',
+    'finance.account.edit': 'Editar conta',
+    'finance.account.name': 'Nome da conta',
+    'finance.account.type': 'Tipo',
+    'finance.account.balance': 'Saldo inicial',
+    'finance.account.color': 'Cor',
+    'finance.account.icon': 'Ícone',
+    'finance.account.archived': 'Arquivada',
+    'finance.account.unarchive': 'Restaurar',
+    'finance.account.archive_confirm': 'Arquivar esta conta? As transações continuam vinculadas, mas a conta fica oculta.',
+    'finance.account.delete_confirm': 'Excluir esta conta? Isso também remove todas as transações vinculadas. Não dá pra desfazer.',
+    'common.archive': 'Arquivar',
+    'common.unarchive': 'Restaurar',
+    'common.name': 'Nome',
+    'common.type': 'Tipo',
 
     // Dashboard tabs (bug fix - faltavam em PT-BR)
     'tab.overview': 'Visão geral',

@@ -6,12 +6,15 @@ import {
   CircleDollarSign,
   Plus,
   Trash2,
-  X
+  X,
+  Settings2,
+  Pencil
 } from 'lucide-react'
 import { rangeStr, todayStr, cn } from '../lib/utils'
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
 import type { Account, Category, Transaction } from '../types'
+import { AccountDialog } from '../components/finance/AccountDialog'
 
 // Formata centavos pra string em reais. Ex: 12345 -> "R$ 123,45"
 function fmtBRL(cents: number): string {
@@ -51,6 +54,8 @@ export function Finance() {
   const [categories, setCategories] = useState<Category[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [showAdd, setShowAdd] = useState(false)
+  const [showAccountDialog, setShowAccountDialog] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 
   const load = async () => {
     if (!activeProfile) return
@@ -140,6 +145,17 @@ export function Finance() {
             <Plus className="w-3.5 h-3.5" />
             <span>{t('finance.add_transaction')}</span>
           </button>
+          <button
+            onClick={() => {
+              setEditingAccount(null)
+              setShowAccountDialog(true)
+            }}
+            className="btn btn-secondary"
+            title={t('finance.accounts.manage')}
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            <span>{t('finance.accounts')}</span>
+          </button>
         </div>
       </div>
 
@@ -170,6 +186,61 @@ export function Finance() {
           accent={overview && overview.net >= 0 ? 'text-success' : 'text-danger'}
         />
       </div>
+
+      {/* Accounts list (v0.3.1 — gestão inline de contas) */}
+      {accounts.length > 0 && (
+        <div className="bg-bg-card border border-border rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-text">{t('finance.accounts')}</h2>
+            <button
+              onClick={() => {
+                setEditingAccount(null)
+                setShowAccountDialog(true)
+              }}
+              className="text-xs text-accent hover:text-accent-hover flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" />
+              {t('finance.account.new')}
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {accounts.map((a) => (
+              <div
+                key={a.id}
+                className="border border-border rounded-lg p-3 hover:border-border-strong transition-colors group"
+              >
+                <div className="flex items-start justify-between mb-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: a.color }}
+                    >
+                      <Wallet className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-text truncate">{a.name}</div>
+                      <div className="text-[11px] text-text-muted">
+                        {t(`finance.account.${a.type}`)}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEditingAccount(a)
+                      setShowAccountDialog(true)
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-text transition-opacity"
+                    title={t('common.edit')}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="text-base font-semibold text-text">{fmtBRL(a.balance)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Recent transactions */}
@@ -280,6 +351,21 @@ export function Finance() {
           accounts={accounts}
           categories={categories}
           profileId={activeProfile?.id ?? 1}
+        />
+      )}
+
+      {showAccountDialog && (
+        <AccountDialog
+          account={editingAccount ?? undefined}
+          onClose={() => {
+            setShowAccountDialog(false)
+            setEditingAccount(null)
+          }}
+          onSaved={async () => {
+            setShowAccountDialog(false)
+            setEditingAccount(null)
+            await load()
+          }}
         />
       )}
     </div>

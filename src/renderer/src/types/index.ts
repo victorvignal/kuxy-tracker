@@ -79,6 +79,7 @@ export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'ca
 
 export interface Account {
   id: number
+  profileId?: number
   name: string
   type: AccountType
   balance: number // centavos
