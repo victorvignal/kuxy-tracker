@@ -118,6 +118,7 @@ export type SubscriptionInterval = 'monthly' | 'yearly' | 'weekly'
 
 export interface Subscription {
   id: number
+  profileId?: number
   accountId: number | null
   categoryId: number | null
   name: string
