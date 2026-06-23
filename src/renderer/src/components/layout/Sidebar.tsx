@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+﻿import { NavLink, useNavigate } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useProfileStore } from '../../store/useProfile'
 import { useT } from '../../lib/i18n'
@@ -46,9 +46,9 @@ const GENERAL: Item[] = [
   { path: '/feedback', labelKey: 'nav.feedback', Icon: IconFeedback }
 ]
 
-// Mapas legado → novo: rotas que existiam no KUXY antigo mas não no template.
-// Mantidas no mapa de paths pra que deep links e bookmarks não quebrem,
-// mas só aparecem se o perfil permitir explicitamente (default = false).
+// Mapas legado â†’ novo: rotas que existiam no KUXY antigo mas nÃ£o no template.
+// Mantidas no mapa de paths pra que deep links e bookmarks nÃ£o quebrem,
+// mas sÃ³ aparecem se o perfil permitir explicitamente (default = false).
 const LEGACY_PATH_MAP: Record<string, Item> = {
   '/habits': { path: '/habits', labelKey: 'nav.habits', Icon: IconPerformance },
   '/routines': { path: '/routines', labelKey: 'nav.routines', Icon: IconPerformance },
@@ -68,8 +68,8 @@ export function Sidebar() {
   const active = useProfileStore((s) => s.getActive())
 
   // Itens do template (sidebar nova) + itens legados permitidos pelo perfil.
-  // Default = só os itens do template. Itens antigos ficam disponíveis se o
-  // usuário adicionar via customização de sidebar do perfil.
+  // Default = sÃ³ os itens do template. Itens antigos ficam disponÃ­veis se o
+  // usuÃ¡rio adicionar via customizaÃ§Ã£o de sidebar do perfil.
   const templatePaths = new Set([...MAIN_MENU.map((i) => i.path), ...GENERAL.map((i) => i.path)])
   const allowedLegacy =
     active?.sidebarItems?.filter((p) => !templatePaths.has(p) && LEGACY_PATH_MAP[p]) ?? []
@@ -79,26 +79,18 @@ export function Sidebar() {
       className="w-sidebar shrink-0 border-r border-border bg-bg-subtle flex flex-col h-screen"
       style={{ width: 'var(--sidebar-width)' }}
     >
-      {/* Brand / Profile switcher (template: 18px 16px 14px padding) */}
+      {/* Brand / Profile switcher (template: 18px 16px 14px padding).
+         ProfileSwitcher renderiza seu prÃ³prio botÃ£o trigger com o styling
+         exato do template (avatar preto + raio roxo + nome + chevron duplo)
+         e cuida do dropdown modal de perfis. */}
       <div className="px-4 pt-[18px] pb-[14px]">
-        <button
-          onClick={() => navigate('/settings/profiles')}
-          className="flex items-center gap-[11px] w-full bg-transparent hover:bg-bg-hover rounded-md py-1 px-1.5 transition-colors"
-        >
-          <span className="w-[34px] h-[34px] rounded-lg bg-black border border-border-strong flex items-center justify-center shrink-0">
-            <BrandLogo size={17} />
-          </span>
-          <span className="text-base font-bold tracking-tight flex-1 text-left text-text">
-            {active?.name ?? t('profile.default_name')}
-          </span>
-          <ChevronDoubleDown size={15} color="var(--color-text-subtle)" />
-        </button>
+        <ProfileSwitcher />
       </div>
 
       {/* Nav scrollable */}
       <div className="flex-1 overflow-y-auto px-3 pb-2">
         {/* Main Menu heading */}
-        <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-2 text-text-subtle text-[11px] font-semibold uppercase tracking-wider">
+        <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-2 text-text-subtle text-tmpl-micro uppercase tracking-[.06em]">
           <span>{t('sidebar.main_menu')}</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9" />
@@ -113,7 +105,7 @@ export function Sidebar() {
               end={item.path === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-[13.5px] font-medium transition-colors',
+                  'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-tmpl-body transition-colors',
                   isActive
                     ? 'bg-bg-hover text-text'
                     : 'text-text-muted hover:bg-bg-hover hover:text-text'
@@ -129,7 +121,7 @@ export function Sidebar() {
         {/* Itens legados permitidos pelo perfil (default = vazio) */}
         {allowedLegacy.length > 0 && (
           <>
-            <div className="flex items-center gap-1.5 px-2 pt-4 pb-2 text-text-subtle text-[11px] font-semibold uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 px-2 pt-4 pb-2 text-text-subtle text-tmpl-micro uppercase tracking-[.06em]">
               <span>{t('sidebar.legacy')}</span>
             </div>
             <nav className="flex flex-col gap-0.5">
@@ -141,7 +133,7 @@ export function Sidebar() {
                     to={path}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-[13.5px] font-medium transition-colors',
+                        'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-tmpl-body transition-colors',
                         isActive
                           ? 'bg-bg-hover text-text'
                           : 'text-text-muted hover:bg-bg-hover hover:text-text'
@@ -158,7 +150,7 @@ export function Sidebar() {
         )}
 
         {/* General heading */}
-        <div className="flex items-center gap-1.5 px-2 pt-[18px] pb-2 text-text-subtle text-[11px] font-semibold uppercase tracking-wider">
+        <div className="flex items-center gap-1.5 px-2 pt-[18px] pb-2 text-text-subtle text-tmpl-micro uppercase tracking-[.06em]">
           <span>{t('sidebar.general')}</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9" />
@@ -172,7 +164,7 @@ export function Sidebar() {
               to={item.path}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-[13.5px] font-medium transition-colors',
+                  'flex items-center gap-[11px] px-[11px] py-[9px] rounded-lg text-tmpl-body transition-colors',
                   isActive
                     ? 'bg-bg-hover text-text'
                     : 'text-text-muted hover:bg-bg-hover hover:text-text'
@@ -195,19 +187,19 @@ export function Sidebar() {
           <span className="w-8 h-8 rounded-lg bg-bg-card border border-border-strong flex items-center justify-center">
             <BrandLogo size={15} />
           </span>
-          <div className="text-[14px] font-semibold mt-3 text-text">Free Trial Version</div>
+          <div className="text-[14px] font-semibold leading-tight mt-3 text-text">Free Trial Version</div>
           <div className="h-[5px] rounded-full bg-border-strong mt-2.5 overflow-hidden">
             <div
               className="h-full bg-accent rounded-full transition-all"
               style={{ width: '42%' }}
             />
           </div>
-          <div className="text-xs text-text-muted leading-snug mt-2.5">
+          <div className="text-tmpl-body-sm text-text-muted leading-[1.45] mt-2.5">
             {t('sidebar.trial_body', { days: 4 })}
           </div>
           <button
             onClick={() => navigate('/settings/billing')}
-            className="flex items-center gap-1.5 bg-transparent border-none p-0 mt-2.5 text-text text-[13px] font-semibold cursor-pointer hover:opacity-80"
+            className="flex items-center gap-1.5 bg-transparent border-none p-0 mt-2.5 text-text text-tmpl-body-sm font-semibold cursor-pointer hover:opacity-80"
           >
             {t('sidebar.trial_cta')}
             <ArrowRight size={13} />
@@ -225,15 +217,15 @@ export function Sidebar() {
             className="w-7 h-7 rounded-full shrink-0"
             style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-dark))' }}
           />
-          <span className="text-[13px] font-semibold flex-1 text-left text-text">
-            Victor Vignal
+          <span className="text-tmpl-body-sm font-semibold flex-1 text-left text-text">
+            {active?.name ?? 'Victor Vignal'}
           </span>
           <ChevronDoubleDown size={14} color="var(--color-text-subtle)" />
         </button>
       </div>
 
       {/* ProfileSwitcher modal trigger (hidden, used by Topbar button via store) */}
-      <ProfileSwitcher />
+      {/* (removido: o trigger estÃ¡ acima da sidebar, no header) */}
     </aside>
   )
 }

@@ -74,7 +74,7 @@ export function Topbar() {
         {/* Title com ícone (template: Dashboard icon + name) */}
         <div className="flex items-center gap-2.5">
           <IconDashboard size={20} color="var(--color-text)" />
-          <span className="text-[18px] font-bold tracking-tight">{title}</span>
+          <span className="text-tmpl-title-lg">{title}</span>
         </div>
 
         {/* Search bar com atalho ⌘K (template) */}
@@ -88,11 +88,11 @@ export function Topbar() {
             id="topbar-search"
             type="text"
             placeholder={t('common.search')}
-            className="w-full bg-bg-card border border-border rounded-[10px] text-[13.5px] text-text placeholder:text-text-subtle outline-none focus:border-border-strong transition-colors"
+            className="w-full bg-bg-card border border-border rounded-[10px] text-tmpl-body text-text placeholder:text-text-subtle outline-none focus:border-border-strong transition-colors"
             style={{ padding: '10px 50px 10px 40px' }}
           />
           <div className="absolute right-[10px] top-1/2 -translate-y-1/2 flex gap-0.5">
-            <span className="text-[11px] text-text-subtle border border-border bg-bg rounded-[5px] px-1.5 py-0.5">
+            <span className="text-tmpl-micro text-text-subtle border border-border bg-bg rounded-[5px] px-1.5 py-0.5">
               ⌘K
             </span>
           </div>
@@ -103,7 +103,7 @@ export function Topbar() {
         {/* Botão Add (template) */}
         <button
           onClick={() => setShowNewHabit(true)}
-          className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] text-[13.5px] font-semibold text-text hover:bg-bg-hover transition-colors"
+          className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors"
           style={{ padding: '9px 15px' }}
         >
           {t('common.add')}
@@ -113,7 +113,7 @@ export function Topbar() {
         {/* Botão Invite (template) */}
         <button
           onClick={handleInvite}
-          className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] text-[13.5px] font-semibold text-text hover:bg-bg-hover transition-colors"
+          className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors"
           style={{ padding: '9px 15px' }}
         >
           <IconInvite size={15} />

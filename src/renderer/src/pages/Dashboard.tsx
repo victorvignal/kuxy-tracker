@@ -109,9 +109,9 @@ function StatCard({
       <span className="w-[34px] h-[34px] rounded-lg bg-bg-hover border border-border flex items-center justify-center">
         <Icon size={16} color="var(--color-text-muted)" />
       </span>
-      <div className="text-[13.5px] text-text-muted mt-4">{label}</div>
-      <div className="text-[30px] font-bold tracking-tight mt-1.5">{value}</div>
-      <div className="text-[12.5px] mt-2">
+      <div className="text-tmpl-body text-text-muted mt-4">{label}</div>
+      <div className="text-tmpl-stat-value mt-1.5">{value}</div>
+      <div className="text-tmpl-label mt-2">
         <span
           className="font-semibold"
           style={{ color: deltaPositive ? 'var(--color-success)' : 'var(--color-danger)' }}
@@ -256,7 +256,7 @@ export function Dashboard() {
             <button
               key={i}
               onClick={() => setPeriod(i as 0 | 1 | 2)}
-              className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+              className={`px-4 py-1.5 rounded-md text-tmpl-body-sm font-medium transition-colors ${
                 period === i
                   ? 'bg-bg-hover text-text shadow-card'
                   : 'text-text-muted hover:text-text'
@@ -267,11 +267,11 @@ export function Dashboard() {
           ))}
         </div>
         <div className="flex-1" />
-        <button className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] px-[15px] py-[9px] text-[13.5px] font-semibold text-text hover:bg-bg-hover transition-colors">
+        <button className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] px-[15px] py-[9px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors">
           <IconExport size={15} />
           {t('common.export')}
         </button>
-        <button className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] px-[14px] py-[9px] text-[13.5px] font-semibold text-text hover:bg-bg-hover transition-colors">
+        <button className="flex items-center gap-2 bg-bg-card border border-border rounded-[10px] px-[14px] py-[9px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors">
           {t('common.new')}
           <span className="w-px h-4 bg-border" />
           <ChevronDown size={14} color="var(--color-text-muted)" />
@@ -318,13 +318,13 @@ export function Dashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <IconTrendUpAccent size={18} />
-                <span className="text-[15px] font-semibold">{t('dashboard.balance_flow')}</span>
+                <span className="text-tmpl-title-sm">{t('dashboard.balance_flow')}</span>
               </div>
               <IconMoreDots size={18} color="var(--color-text-subtle)" />
             </div>
-            <div className="text-[34px] font-bold tracking-tight mt-3.5">{fmtBRL(stats.totalSavings + stats.monthlyBalance + 30000)}</div>
-            <div className="text-[13.5px] text-text-muted mt-0.5">Total Balance</div>
-            <div className="text-[12.5px] mt-1.5">
+            <div className="text-tmpl-stat-total mt-3.5">{fmtBRL(stats.totalSavings + stats.monthlyBalance + 30000)}</div>
+            <div className="text-tmpl-body text-text-muted mt-0.5">Total Balance</div>
+            <div className="text-tmpl-label mt-1.5">
               <span className="text-success font-semibold">+12% (R$ 4.520)</span>{' '}
               <span className="text-text-subtle">· {t('period.30d')}</span>
             </div>
@@ -332,8 +332,8 @@ export function Dashboard() {
             <div className="flex flex-wrap gap-[18px] items-end mt-4">
               {/* sub-card Savings Goal */}
               <div className="flex-1 min-w-[190px] max-w-[220px] bg-bg border border-border rounded-[13px] p-4">
-                <div className="text-[14px] font-semibold">{t('dashboard.savings_goal_title')}</div>
-                <div className="text-[12.5px] text-text-muted leading-snug mt-2">
+                <div className="text-[14px] font-semibold leading-tight">{t('dashboard.savings_goal_title')}</div>
+                <div className="text-tmpl-label text-text-muted leading-[1.5] mt-2">
                   {t('dashboard.savings_goal_body')}
                 </div>
                 <div className="flex items-center justify-between mt-4">
@@ -398,7 +398,7 @@ export function Dashboard() {
           <div className="bg-bg-card border border-border rounded-2xl p-[22px] shadow-card flex flex-col">
             <div className="flex items-center gap-2">
               <IconGridAccent size={18} />
-              <span className="text-[15px] font-semibold">{t('dashboard.spending_breakdown')}</span>
+              <span className="text-tmpl-title-sm">{t('dashboard.spending_breakdown')}</span>
             </div>
 
             <div className="flex items-center gap-5 mt-4 flex-1">
@@ -406,7 +406,7 @@ export function Dashboard() {
                 <Donut segments={spending} />
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <div className="text-2xl font-bold tracking-tight">{spendingTotal.toLocaleString('pt-BR')}</div>
-                  <div className="text-[10.5px] text-text-muted">{t('dashboard.total_spent')}</div>
+                  <div className="text-tmpl-micro-xs text-text-muted">{t('dashboard.total_spent')}</div>
                 </div>
               </div>
               <div className="flex-1 flex flex-col gap-3">
@@ -419,15 +419,15 @@ export function Dashboard() {
                         className="w-[3px] h-[18px] rounded-full shrink-0"
                         style={{ background: s.color }}
                       />
-                      <span className="text-[13px] text-text-muted flex-1">{s.label}</span>
-                      <span className="text-[13.5px] font-semibold">{s.valLabel}</span>
+                      <span className="text-tmpl-body-sm text-text-muted flex-1">{s.label}</span>
+                      <span className="text-tmpl-body font-semibold">{s.valLabel}</span>
                     </div>
                   ))
                 )}
               </div>
             </div>
 
-            <button className="flex items-center justify-center gap-2 w-full bg-bg border border-border rounded-[11px] py-[11px] mt-[18px] text-[13.5px] font-semibold text-text hover:bg-bg-hover transition-colors">
+            <button className="flex items-center justify-center gap-2 w-full bg-bg border border-border rounded-[11px] py-[11px] mt-[18px] text-tmpl-body font-semibold text-text hover:bg-bg-hover transition-colors">
               {t('dashboard.more_details')}
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" />

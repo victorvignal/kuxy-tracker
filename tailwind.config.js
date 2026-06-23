@@ -56,6 +56,28 @@ export default {
       },
       height: {
         topbar: 'var(--topbar-height)'
+      },
+      // Typography tokens do template Pessoal Dashboard.
+      // Font-sizes 1:1; weight/letter-spacing aplicados juntos pra evitar esquecer.
+      fontSize: {
+        tmpl: {
+          // title
+          'title-lg': ['18px', { lineHeight: 'normal', fontWeight: '700', letterSpacing: '-0.01em' }],
+          'title-md': ['16px', { lineHeight: 'normal', fontWeight: '700', letterSpacing: '-0.01em' }],
+          'title-sm': ['15px', { lineHeight: 'normal', fontWeight: '600' }],
+          // body
+          body: ['13.5px', { lineHeight: 'normal', fontWeight: '500' }],
+          'body-sm': ['13px', { lineHeight: 'normal', fontWeight: '500' }],
+          // labels
+          label: ['12.5px', { lineHeight: 'normal', fontWeight: '600' }],
+          'label-xs': ['12px', { lineHeight: 'normal', fontWeight: '500' }],
+          // micro
+          micro: ['11px', { lineHeight: 'normal', fontWeight: '600' }],
+          'micro-xs': ['10.5px', { lineHeight: 'normal', fontWeight: '600' }],
+          // stat values
+          'stat-value': ['30px', { lineHeight: 'normal', fontWeight: '700', letterSpacing: '-0.02em' }],
+          'stat-total': ['34px', { lineHeight: 'normal', fontWeight: '700', letterSpacing: '-0.02em' }]
+        }
       }
     }
   },

@@ -60,6 +60,23 @@ export type Theme = {
     lg: string
     xl: string
   }
+  type: {
+    // Sizes 1:1 do template Pessoal Dashboard.
+    // Classes Tailwind customizadas (text-tmpl-xl etc) são definidas em tailwind.config.js
+    // e mapeiam pra estes tokens via CSS vars.
+    titleLg: string // 18px / 700 / -.01em
+    titleMd: string // 16px / 700
+    titleSm: string // 15px / 600
+    body: string // 13.5px / 500
+    bodySmall: string // 13px / 500
+    label: string // 12.5px / 600
+    labelXs: string // 12px / 500
+    micro: string // 11px / 600
+    microXs: string // 10.5px / 600
+    // Big numbers (stat cards, total balance)
+    statValue: string // 30px / 700 / -.02em
+    statTotal: string // 34px / 700 / -.02em
+  }
   spacing: {
     sidebarWidth: string
     topbarHeight: string
@@ -109,6 +126,19 @@ export const DARK: Theme = {
     lg: '13px',
     xl: '16px'
   },
+  type: {
+    titleLg: '18px',
+    titleMd: '16px',
+    titleSm: '15px',
+    body: '13.5px',
+    bodySmall: '13px',
+    label: '12.5px',
+    labelXs: '12px',
+    micro: '11px',
+    microXs: '10.5px',
+    statValue: '30px',
+    statTotal: '34px'
+  },
   spacing: {
     sidebarWidth: '252px',
     topbarHeight: '56px'
@@ -154,6 +184,7 @@ export const LIGHT: Theme = {
   radii: DARK.radii,
   spacing: DARK.spacing,
   font: DARK.font,
+  type: DARK.type,
   shadow: {
     card: '0 0 0 1px rgba(0, 0, 0, 0.04)',
     pop: '0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06)'

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Check,
-  ChevronDown,
   Plus,
   Pencil,
   Archive,
@@ -13,6 +12,7 @@ import {
   Star,
   X
 } from 'lucide-react'
+import { BrandLogo, ChevronDoubleDown } from '../template-icons/TemplateIcon'
 import { useProfileStore } from '../../store/useProfile'
 import { useT } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
@@ -103,7 +103,6 @@ export function ProfileSwitcher() {
   }, [open])
 
   const active = profiles.find((p) => p.id === activeId)
-  const ActiveIcon = active ? ICONS[active.icon] || User : User
 
   const editingProfile =
     mode && typeof mode === 'object' && mode.kind === 'edit'
@@ -171,36 +170,20 @@ export function ProfileSwitcher() {
 
   return (
     <div ref={ref} className="relative">
+      {/* Brand trigger: replica 1:1 do template Pessoal Dashboard (18px 16px 14px padding).
+         Avatar preto sólido 34x34 com border bd-strong + raio roxo (brand logo) dentro.
+         Nome do perfil ativo em 16px/700/-.01em + ChevronDoubleDown 15px em tx-subtle. */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className={cn(
-          'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors text-left',
-          'hover:bg-bg-hover text-text'
-        )}
+        className="flex items-center gap-[11px] w-full bg-transparent hover:bg-bg-hover rounded-md py-1 px-1.5 transition-colors text-left"
       >
-        <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: active?.color || '#a855f7' }}
-        >
-          <ActiveIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-        </div>
-        <div className="flex-1 min-w-0 text-left">
-          <div className="text-sm font-semibold leading-tight truncate">
-            {active?.name || t('profile.select')}
-          </div>
-          {active?.description ? (
-            <div className="text-[10px] text-text-subtle leading-tight truncate">
-              {active.description}
-            </div>
-          ) : (
-            <div className="text-[10px] text-text-subtle leading-tight">
-              {t('profile.active')}
-            </div>
-          )}
-        </div>
-        <ChevronDown
-          className={cn('w-3.5 h-3.5 text-text-muted transition-transform', open && 'rotate-180')}
-        />
+        <span className="w-[34px] h-[34px] rounded-lg bg-black border border-border-strong flex items-center justify-center shrink-0">
+          <BrandLogo size={17} />
+        </span>
+        <span className="text-tmpl-title-md flex-1 text-text truncate">
+          {active?.name || t('profile.select')}
+        </span>
+        <ChevronDoubleDown size={15} color="var(--color-text-subtle)" />
       </button>
 
       {open && (
