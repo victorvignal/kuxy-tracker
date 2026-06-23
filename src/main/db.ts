@@ -232,11 +232,28 @@ export async function getDb(): Promise<DrizzleDb> {
       created_at INTEGER NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS budgets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+      category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+      name TEXT,
+      amount INTEGER NOT NULL,
+      period TEXT NOT NULL DEFAULT 'monthly',
+      rollover INTEGER NOT NULL DEFAULT 0,
+      alert_threshold INTEGER NOT NULL DEFAULT 80,
+      start_date TEXT NOT NULL,
+      archived INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
     CREATE INDEX IF NOT EXISTS idx_transactions_profile ON transactions(profile_id);
     CREATE INDEX IF NOT EXISTS idx_accounts_profile ON accounts(profile_id);
     CREATE INDEX IF NOT EXISTS idx_categories_profile ON categories(profile_id);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_profile ON subscriptions(profile_id);
+    CREATE INDEX IF NOT EXISTS idx_budgets_profile ON budgets(profile_id);
+    CREATE INDEX IF NOT EXISTS idx_budgets_category ON budgets(category_id);
   `)
 
   // Seed default categories + a checking account per profile, caso a tabela

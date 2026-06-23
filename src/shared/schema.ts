@@ -248,6 +248,34 @@ export type NewTransaction = typeof transactions.$inferInsert
 export type Subscription = typeof subscriptions.$inferSelect
 export type NewSubscription = typeof subscriptions.$inferInsert
 
+// Budgets (v0.3.1): limite de gasto por categoria + período.
+// Rollover (v1 simples): se true, saldo não usado do mês anterior
+// acumula como bônus no mês corrente. Implementação completa do rollover
+// (histórico, carryover parcial) fica pra v2 — esse MVP só guarda a flag.
+export const budgets = sqliteTable('budgets', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  profileId: integer('profile_id')
+    .notNull()
+    .default(1)
+    .references(() => profiles.id, { onDelete: 'cascade' }),
+  categoryId: integer('category_id')
+    .notNull()
+    .references(() => categories.id, { onDelete: 'cascade' }),
+  name: text('name'),
+  amount: integer('amount').notNull(), // centavos
+  period: text('period').notNull().default('monthly'), // 'weekly' | 'monthly' | 'yearly'
+  rollover: integer('rollover', { mode: 'boolean' }).notNull().default(false),
+  alertThreshold: integer('alert_threshold').notNull().default(80), // 0-100
+  startDate: text('start_date').notNull(), // YYYY-MM-DD
+  archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date())
+})
+
+export type Budget = typeof budgets.$inferSelect
+export type NewBudget = typeof budgets.$inferInsert
+export type BudgetPeriod = 'weekly' | 'monthly' | 'yearly'
+
 /**
  * Itens disponíveis na sidebar. O path é a chave, e cada perfil diz
  * quais itens aparecem nele (via profiles.sidebarItems).

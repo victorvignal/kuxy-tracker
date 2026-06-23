@@ -596,6 +596,115 @@ function registerIpc(): void {
     persistDb()
     return { ok: true }
   })
+
+  // --- Budgets ---
+  // Helper: dado um startDate e period, retorna [from, to] do período corrente.
+  // weekly = 7 dias a partir do startDate, monthly = mesmo dia do mes,
+  // yearly = mesma data do ano. A cada virada de período, o bloco "anda".
+  function currentPeriodRange(start: string, period: 'weekly' | 'monthly' | 'yearly'): { from: string; to: string } {
+    const startDate = new Date(start)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    let from = new Date(startDate)
+    let to: Date
+    while (true) {
+      if (period === 'weekly') {
+        to = new Date(from)
+        to.setDate(to.getDate() + 6)
+      } else if (period === 'monthly') {
+        to = new Date(from)
+        to.setMonth(to.getMonth() + 1)
+        to.setDate(to.getDate() - 1)
+      } else {
+        to = new Date(from)
+        to.setFullYear(to.getFullYear() + 1)
+        to.setDate(to.getDate() - 1)
+      }
+      if (to >= today) break
+      from = new Date(to)
+      from.setDate(from.getDate() + 1)
+    }
+    return {
+      from: from.toISOString().slice(0, 10),
+      to: to.toISOString().slice(0, 10)
+    }
+  }
+
+  ipcMain.handle('budgets:list', (_e, params: { profileId?: number; includeArchived?: boolean } = {}) => {
+    const conds: any[] = []
+    if (params.profileId) conds.push(eq(schema.budgets.profileId, params.profileId))
+    if (!params.includeArchived) conds.push(eq(schema.budgets.archived, false))
+    const list = db
+      .select()
+      .from(schema.budgets)
+      .where(conds.length ? and(...conds) : undefined)
+      .all()
+    // Enriquecer com spent, status, daysRemaining
+    return list.map((b) => {
+      const range = currentPeriodRange(b.startDate, b.period as 'weekly' | 'monthly' | 'yearly')
+      const txConds: any[] = [
+        eq(schema.transactions.categoryId, b.categoryId),
+        eq(schema.transactions.type, 'expense'),
+        gte(schema.transactions.date, range.from),
+        lte(schema.transactions.date, range.to)
+      ]
+      if (params.profileId) txConds.push(eq(schema.transactions.profileId, params.profileId))
+      const spent = db
+        .select()
+        .from(schema.transactions)
+        .where(and(...txConds))
+        .all()
+        .reduce((s, t) => s + t.amount, 0)
+      const pct = b.amount > 0 ? (spent / b.amount) * 100 : 0
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const toDate = new Date(range.to)
+      const daysRemaining = Math.max(0, Math.ceil((toDate.getTime() - today.getTime()) / 86400000))
+      let status: 'ok' | 'warning' | 'exceeded'
+      if (pct >= 100) status = 'exceeded'
+      else if (pct >= b.alertThreshold) status = 'warning'
+      else status = 'ok'
+      return { ...b, spent, pct, daysRemaining, status, periodFrom: range.from, periodTo: range.to }
+    })
+  })
+
+  ipcMain.handle('budgets:create', async (_e, data: schema.NewBudget) => {
+    const result = db
+      .insert(schema.budgets)
+      .values({ ...data, createdAt: new Date(), updatedAt: new Date() })
+      .returning()
+      .get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('budgets:update', async (_e, id: number, data: Partial<schema.NewBudget>) => {
+    const result = db
+      .update(schema.budgets)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(schema.budgets.id, id))
+      .returning()
+      .get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('budgets:archive', async (_e, id: number, archived: boolean) => {
+    const result = db
+      .update(schema.budgets)
+      .set({ archived, updatedAt: new Date() })
+      .where(eq(schema.budgets.id, id))
+      .returning()
+      .get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('budgets:delete', async (_e, id: number) => {
+    db.delete(schema.budgets).where(eq(schema.budgets.id, id)).run()
+    persistDb()
+    return { ok: true }
+  })
 }
 
 app.whenReady().then(async () => {

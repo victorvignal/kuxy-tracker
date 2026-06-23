@@ -11,15 +11,19 @@ import {
   Pencil,
   Pause,
   Play,
-  Repeat
+  Repeat,
+  Target,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Area, AreaChart } from 'recharts'
 import { rangeStr, todayStr, cn } from '../lib/utils'
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
-import type { Account, Category, Subscription, Transaction } from '../types'
+import type { Account, Budget, Category, Subscription, Transaction } from '../types'
 import { AccountDialog } from '../components/finance/AccountDialog'
 import { SubscriptionDialog } from '../components/finance/SubscriptionDialog'
+import { BudgetDialog } from '../components/finance/BudgetDialog'
 
 // Formata centavos pra string em reais. Ex: 12345 -> "R$ 123,45"
 function fmtBRL(cents: number): string {
@@ -64,11 +68,14 @@ export function Finance() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [showSubDialog, setShowSubDialog] = useState(false)
   const [editingSub, setEditingSub] = useState<Subscription | null>(null)
+  const [budgets, setBudgets] = useState<Budget[]>([])
+  const [showBudgetDialog, setShowBudgetDialog] = useState(false)
+  const [editingBudget, setEditingBudget] = useState<Budget | null>(null)
 
   const load = async () => {
     if (!activeProfile) return
     const { from, to } = rangeStr(period)
-    const [ov, accs, cats, txs, subs] = await Promise.all([
+    const [ov, accs, cats, txs, subs, buds] = await Promise.all([
       window.api.finance.overview({ from, to, profileId: activeProfile.id }),
       window.api.finance.accounts.list({ profileId: activeProfile.id }),
       window.api.finance.categories.list({ profileId: activeProfile.id }),
@@ -78,13 +85,15 @@ export function Finance() {
         to,
         limit: 50
       }),
-      window.api.finance.subscriptions.list({ profileId: activeProfile.id })
+      window.api.finance.subscriptions.list({ profileId: activeProfile.id }),
+      window.api.finance.budgets.list({ profileId: activeProfile.id })
     ])
     setOverview(ov)
     setAccounts(accs as Account[])
     setCategories(cats as Category[])
     setTransactions(txs as Transaction[])
     setSubscriptions(subs as Subscription[])
+    setBudgets(buds as Budget[])
   }
 
   useEffect(() => {
@@ -449,6 +458,139 @@ export function Finance() {
         </div>
       )}
 
+      {/* Budgets list (v0.3.1) */}
+      <div className="bg-bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Target className="w-4 h-4 text-text-muted" />
+            <h2 className="text-sm font-semibold text-text">{t('finance.budgets')}</h2>
+          </div>
+          <button
+            onClick={() => {
+              setEditingBudget(null)
+              setShowBudgetDialog(true)
+            }}
+            className="text-xs text-accent hover:text-accent-hover flex items-center gap-1"
+          >
+            <Plus className="w-3 h-3" />
+            {t('finance.budget.new')}
+          </button>
+        </div>
+        {budgets.length === 0 ? (
+          <div className="py-6 text-center text-text-subtle text-xs">
+            {t('finance.budget.no_category')}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {budgets.map((b) => {
+              const cat = categories.find((c) => c.id === b.categoryId)
+              const spent = b.spent ?? 0
+              const pct = b.pct ?? 0
+              const days = b.daysRemaining ?? 0
+              const status = b.status ?? 'ok'
+              const statusMeta = {
+                ok: {
+                  color: 'text-success',
+                  bar: 'bg-success',
+                  label: t('finance.budget.on_track'),
+                  icon: CheckCircle2
+                },
+                warning: {
+                  color: 'text-warning',
+                  bar: 'bg-warning',
+                  label: t('finance.budget.warning'),
+                  icon: AlertTriangle
+                },
+                exceeded: {
+                  color: 'text-danger',
+                  bar: 'bg-danger',
+                  label: t('finance.budget.exceeded'),
+                  icon: AlertTriangle
+                }
+              }[status]
+              const StatusIcon = statusMeta.icon
+              const remaining = b.amount - spent
+              return (
+                <div
+                  key={b.id}
+                  className="border border-border rounded-lg p-3 hover:border-border-strong transition-colors group"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: cat?.color ?? '#8b5cf6' }}
+                      >
+                        <Target className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-text truncate">
+                          {b.name || cat?.name || '—'}
+                        </div>
+                        <div className="text-[11px] text-text-muted truncate">
+                          {cat?.name && b.name ? cat.name : t(`finance.budget.period.${b.period}`)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => {
+                          setEditingBudget(b)
+                          setShowBudgetDialog(true)
+                        }}
+                        className="p-1 text-text-muted hover:text-text rounded"
+                        title={t('common.edit')}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(t('finance.budget.confirm_delete'))) return
+                          try {
+                            await window.api.finance.budgets.delete(b.id)
+                            await load()
+                          } catch (e) {
+                            console.error(e)
+                          }
+                        }}
+                        className="p-1 text-text-muted hover:text-danger rounded"
+                        title={t('common.delete')}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-baseline justify-between text-xs mb-1.5">
+                    <span className="text-text tabular-nums">
+                      {fmtBRL(spent)}{' '}
+                      <span className="text-text-subtle">/ {fmtBRL(b.amount)}</span>
+                    </span>
+                    <span className={cn('font-semibold tabular-nums', statusMeta.color)}>
+                      {pct.toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-bg-subtle overflow-hidden">
+                    <div
+                      className={cn('h-full rounded-full transition-all', statusMeta.bar)}
+                      style={{ width: `${Math.min(100, pct)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-[11px]">
+                    <span className={cn('flex items-center gap-1', statusMeta.color)}>
+                      <StatusIcon className="w-3 h-3" />
+                      {statusMeta.label}
+                    </span>
+                    <span className="text-text-subtle tabular-nums">
+                      {days} {t('finance.budget.days_remaining')} • {fmtBRL(remaining)}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Recent transactions */}
         <div className="lg:col-span-2 bg-bg-card border border-border rounded-xl p-4">
@@ -616,6 +758,22 @@ export function Finance() {
           onSaved={async () => {
             setShowSubDialog(false)
             setEditingSub(null)
+            await load()
+          }}
+        />
+      )}
+
+      {showBudgetDialog && (
+        <BudgetDialog
+          budget={editingBudget ?? undefined}
+          categories={categories}
+          onClose={() => {
+            setShowBudgetDialog(false)
+            setEditingBudget(null)
+          }}
+          onSaved={async () => {
+            setShowBudgetDialog(false)
+            setEditingBudget(null)
             await load()
           }}
         />

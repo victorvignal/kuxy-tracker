@@ -121,6 +121,16 @@ const api = {
       delete: (id: number) =>
         ipcRenderer.invoke('subscriptions:delete', id) as Promise<{ ok: boolean }>
     },
+    budgets: {
+      list: (params?: { profileId?: number; includeArchived?: boolean }) =>
+        ipcRenderer.invoke('budgets:list', params || {}) as Promise<any[]>,
+      create: (data: any) => ipcRenderer.invoke('budgets:create', data) as Promise<any>,
+      update: (id: number, data: any) =>
+        ipcRenderer.invoke('budgets:update', id, data) as Promise<any>,
+      archive: (id: number, archived: boolean) =>
+        ipcRenderer.invoke('budgets:archive', id, archived) as Promise<any>,
+      delete: (id: number) => ipcRenderer.invoke('budgets:delete', id) as Promise<{ ok: boolean }>
+    },
     overview: (params: { from: string; to: string; profileId?: number }) =>
       ipcRenderer.invoke('finance:overview', params) as Promise<{
         income: number
