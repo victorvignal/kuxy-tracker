@@ -13,7 +13,7 @@ import {
   Play,
   Repeat
 } from 'lucide-react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Area, AreaChart } from 'recharts'
 import { rangeStr, todayStr, cn } from '../lib/utils'
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
@@ -106,6 +106,32 @@ export function Finance() {
       .sort((a, b) => b.total - a.total)
   }, [transactions, categories])
 
+  // Balance flow: daily net (income - expense) over the period. Usado no
+  // LineChart recharts abaixo dos stat cards. Datas que nao tem transacao
+  // ficam com 0 (filler com from->to).
+  const balanceFlow = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const tx of transactions) {
+      map.set(tx.date, (map.get(tx.date) ?? 0) + (tx.type === 'income' ? tx.amount : -tx.amount))
+    }
+    const { from, to } = rangeStr(period)
+    const start = new Date(from)
+    const end = new Date(to)
+    const out: Array<{ date: string; net: number; label: string }> = []
+    let running = 0
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const iso = d.toISOString().slice(0, 10)
+      const net = map.get(iso) ?? 0
+      running += net
+      out.push({
+        date: iso,
+        net,
+        label: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+      })
+    }
+    return out
+  }, [transactions, period])
+
   const totalExpense = expenseByCategory.reduce((s, e) => s + e.total, 0) || 1 // evita div/0
 
   const deleteTx = async (id: number) => {
@@ -196,6 +222,62 @@ export function Finance() {
           accent={overview && overview.net >= 0 ? 'text-success' : 'text-danger'}
         />
       </div>
+
+      {/* Balance flow (recharts AreaChart) */}
+      {balanceFlow.length > 0 && balanceFlow.some((b) => b.net !== 0) && (
+        <div className="bg-bg-card border border-border rounded-xl p-4">
+          <div className="mb-2">
+            <h2 className="text-sm font-semibold text-text">{t('finance.balance_flow')}</h2>
+            <p className="text-[11px] text-text-subtle mt-0.5">{t('finance.balance_flow_hint')}</p>
+          </div>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={balanceFlow} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="balanceFlowGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={32}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={50}
+                  tickFormatter={(v: number) => fmtBRLCompact(v)}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--color-bg-card)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    color: 'var(--color-text)'
+                  }}
+                  formatter={(value: number) => fmtBRL(value)}
+                  labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ''}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="net"
+                  stroke="var(--color-accent)"
+                  strokeWidth={2}
+                  fill="url(#balanceFlowGrad)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Accounts list (v0.3.1 — gestão inline de contas) */}
       {accounts.length > 0 && (
