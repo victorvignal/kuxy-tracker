@@ -16,13 +16,16 @@ asarUnpack:
   - resources/**
 win:
   executableName: KUXY
+  artifactName: KUXY-Setup-${version}.${ext}
 mac:
   category: public.app-category.productivity
+  artifactName: KUXY-${version}-${arch}.${ext}
 linux:
   target:
     - AppImage
     - deb
   category: Office
+  artifactName: KUXY-${version}.${ext}
 publish:
   provider: github
   owner: victorvignal
