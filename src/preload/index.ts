@@ -9,7 +9,11 @@ import type {
   NewAccount,
   NewCategory,
   NewTransaction,
-  NewSubscription
+  NewSubscription,
+  NewProject,
+  NewProjectMember,
+  NewProjectTag,
+  NewProjectSubitem
 } from '../shared/schema'
 
 const api = {
@@ -121,16 +125,6 @@ const api = {
       delete: (id: number) =>
         ipcRenderer.invoke('subscriptions:delete', id) as Promise<{ ok: boolean }>
     },
-    budgets: {
-      list: (params?: { profileId?: number; includeArchived?: boolean }) =>
-        ipcRenderer.invoke('budgets:list', params || {}) as Promise<any[]>,
-      create: (data: any) => ipcRenderer.invoke('budgets:create', data) as Promise<any>,
-      update: (id: number, data: any) =>
-        ipcRenderer.invoke('budgets:update', id, data) as Promise<any>,
-      archive: (id: number, archived: boolean) =>
-        ipcRenderer.invoke('budgets:archive', id, archived) as Promise<any>,
-      delete: (id: number) => ipcRenderer.invoke('budgets:delete', id) as Promise<{ ok: boolean }>
-    },
     overview: (params: { from: string; to: string; profileId?: number }) =>
       ipcRenderer.invoke('finance:overview', params) as Promise<{
         income: number
@@ -139,6 +133,52 @@ const api = {
         totalBalance: number
         transactionCount: number
       }>
+  },
+  projects: {
+    list: (params?: { profileId?: number; includeArchived?: boolean }) =>
+      ipcRenderer.invoke('projects:list', params || {}) as Promise<any[]>,
+    get: (id: number) => ipcRenderer.invoke('projects:get', id) as Promise<any>,
+    create: (data: NewProject) => ipcRenderer.invoke('projects:create', data) as Promise<any>,
+    update: (id: number, data: Partial<NewProject>) =>
+      ipcRenderer.invoke('projects:update', id, data) as Promise<any>,
+    archive: (id: number, archived: boolean) =>
+      ipcRenderer.invoke('projects:archive', id, archived) as Promise<{ ok: boolean }>,
+    reorder: (params: { id: number; status: string; sortOrder: number }[]) =>
+      ipcRenderer.invoke('projects:reorder', params) as Promise<{ ok: boolean }>,
+    members: {
+      list: (projectId: number) =>
+        ipcRenderer.invoke('project_members:list', projectId) as Promise<any[]>,
+      add: (projectId: number, member: Omit<NewProjectMember, 'projectId'>) =>
+        ipcRenderer.invoke('project_members:add', projectId, member) as Promise<any>,
+      remove: (id: number) =>
+        ipcRenderer.invoke('project_members:remove', id) as Promise<{ ok: boolean }>
+    },
+    tags: {
+      list: (projectId: number) =>
+        ipcRenderer.invoke('project_tags:list', projectId) as Promise<any[]>,
+      add: (projectId: number, tag: Omit<NewProjectTag, 'projectId'>) =>
+        ipcRenderer.invoke('project_tags:add', projectId, tag) as Promise<any>,
+      remove: (id: number) =>
+        ipcRenderer.invoke('project_tags:remove', id) as Promise<{ ok: boolean }>
+    },
+    comments: {
+      list: (projectId: number) =>
+        ipcRenderer.invoke('project_comments:list', projectId) as Promise<any[]>,
+      add: (projectId: number, content: string, author?: string) =>
+        ipcRenderer.invoke('project_comments:add', projectId, content, author) as Promise<any>,
+      delete: (id: number) =>
+        ipcRenderer.invoke('project_comments:delete', id) as Promise<{ ok: boolean }>
+    },
+    subitems: {
+      list: (projectId: number) =>
+        ipcRenderer.invoke('project_subitems:list', projectId) as Promise<any[]>,
+      add: (projectId: number, data: Omit<NewProjectSubitem, 'projectId'>) =>
+        ipcRenderer.invoke('project_subitems:add', projectId, data) as Promise<any>,
+      update: (id: number, data: Partial<NewProjectSubitem>) =>
+        ipcRenderer.invoke('project_subitems:update', id, data) as Promise<any>,
+      delete: (id: number) =>
+        ipcRenderer.invoke('project_subitems:delete', id) as Promise<{ ok: boolean }>
+    }
   }
 }
 

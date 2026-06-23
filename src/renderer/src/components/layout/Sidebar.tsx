@@ -9,6 +9,7 @@ import {
   Timer,
   Flag,
   CircleDollarSign,
+  Briefcase,
   Settings as SettingsIcon,
   Search,
   Lightbulb
@@ -27,7 +28,8 @@ const ITEM_ICONS: Record<string, any> = {
   '/journal': BookOpen,
   '/focus': Timer,
   '/goals': Flag,
-  '/finance': CircleDollarSign
+  '/finance': CircleDollarSign,
+  '/projects': Briefcase
 }
 
 const KEY_BY_PATH: Record<string, string> = {
@@ -39,7 +41,8 @@ const KEY_BY_PATH: Record<string, string> = {
   '/journal': 'nav.journal',
   '/focus': 'nav.focus',
   '/goals': 'nav.goals',
-  '/finance': 'nav.finance'
+  '/finance': 'nav.finance',
+  '/projects': 'nav.projects'
 }
 
 export function Sidebar() {

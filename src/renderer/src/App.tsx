@@ -9,6 +9,7 @@ import { Journal } from './pages/Journal'
 import { Focus } from './pages/Focus'
 import { Goals } from './pages/Goals'
 import { Finance } from './pages/Finance'
+import { Projects } from './pages/Projects'
 import { Settings } from './pages/Settings'
 import { ThemeProvider } from './design/ThemeProvider'
 
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/focus" element={<Focus />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/finance" element={<Finance />} />
+          <Route path="/projects" element={<Projects />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

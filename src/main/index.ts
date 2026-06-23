@@ -597,80 +597,26 @@ function registerIpc(): void {
     return { ok: true }
   })
 
-  // --- Budgets ---
-  // Helper: dado um startDate e period, retorna [from, to] do período corrente.
-  // weekly = 7 dias a partir do startDate, monthly = mesmo dia do mes,
-  // yearly = mesma data do ano. A cada virada de período, o bloco "anda".
-  function currentPeriodRange(start: string, period: 'weekly' | 'monthly' | 'yearly'): { from: string; to: string } {
-    const startDate = new Date(start)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    let from = new Date(startDate)
-    let to: Date
-    while (true) {
-      if (period === 'weekly') {
-        to = new Date(from)
-        to.setDate(to.getDate() + 6)
-      } else if (period === 'monthly') {
-        to = new Date(from)
-        to.setMonth(to.getMonth() + 1)
-        to.setDate(to.getDate() - 1)
-      } else {
-        to = new Date(from)
-        to.setFullYear(to.getFullYear() + 1)
-        to.setDate(to.getDate() - 1)
-      }
-      if (to >= today) break
-      from = new Date(to)
-      from.setDate(from.getDate() + 1)
-    }
-    return {
-      from: from.toISOString().slice(0, 10),
-      to: to.toISOString().slice(0, 10)
-    }
-  }
+  // ============================================================
+  // PROJECTS (v0.4.0) — board Kanban estilo Notion no perfil Profissional
+  // ============================================================
 
-  ipcMain.handle('budgets:list', (_e, params: { profileId?: number; includeArchived?: boolean } = {}) => {
+  // --- Projects ---
+  ipcMain.handle('projects:list', (_e, params: { profileId?: number; includeArchived?: boolean } = {}) => {
     const conds: any[] = []
-    if (params.profileId) conds.push(eq(schema.budgets.profileId, params.profileId))
-    if (!params.includeArchived) conds.push(eq(schema.budgets.archived, false))
-    const list = db
-      .select()
-      .from(schema.budgets)
-      .where(conds.length ? and(...conds) : undefined)
-      .all()
-    // Enriquecer com spent, status, daysRemaining
-    return list.map((b) => {
-      const range = currentPeriodRange(b.startDate, b.period as 'weekly' | 'monthly' | 'yearly')
-      const txConds: any[] = [
-        eq(schema.transactions.categoryId, b.categoryId),
-        eq(schema.transactions.type, 'expense'),
-        gte(schema.transactions.date, range.from),
-        lte(schema.transactions.date, range.to)
-      ]
-      if (params.profileId) txConds.push(eq(schema.transactions.profileId, params.profileId))
-      const spent = db
-        .select()
-        .from(schema.transactions)
-        .where(and(...txConds))
-        .all()
-        .reduce((s, t) => s + t.amount, 0)
-      const pct = b.amount > 0 ? (spent / b.amount) * 100 : 0
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const toDate = new Date(range.to)
-      const daysRemaining = Math.max(0, Math.ceil((toDate.getTime() - today.getTime()) / 86400000))
-      let status: 'ok' | 'warning' | 'exceeded'
-      if (pct >= 100) status = 'exceeded'
-      else if (pct >= b.alertThreshold) status = 'warning'
-      else status = 'ok'
-      return { ...b, spent, pct, daysRemaining, status, periodFrom: range.from, periodTo: range.to }
-    })
+    if (params.profileId) conds.push(eq(schema.projects.profileId, params.profileId))
+    if (!params.includeArchived) conds.push(eq(schema.projects.archived, false))
+    const where = conds.length ? and(...conds) : undefined
+    return db.select().from(schema.projects).where(where).orderBy(schema.projects.sortOrder).all()
   })
 
-  ipcMain.handle('budgets:create', async (_e, data: schema.NewBudget) => {
+  ipcMain.handle('projects:get', (_e, id: number) => {
+    return db.select().from(schema.projects).where(eq(schema.projects.id, id)).get()
+  })
+
+  ipcMain.handle('projects:create', async (_e, data: schema.NewProject) => {
     const result = db
-      .insert(schema.budgets)
+      .insert(schema.projects)
       .values({ ...data, createdAt: new Date(), updatedAt: new Date() })
       .returning()
       .get()
@@ -678,30 +624,127 @@ function registerIpc(): void {
     return result
   })
 
-  ipcMain.handle('budgets:update', async (_e, id: number, data: Partial<schema.NewBudget>) => {
+  ipcMain.handle('projects:update', async (_e, id: number, data: Partial<schema.NewProject>) => {
     const result = db
-      .update(schema.budgets)
+      .update(schema.projects)
       .set({ ...data, updatedAt: new Date() })
-      .where(eq(schema.budgets.id, id))
+      .where(eq(schema.projects.id, id))
       .returning()
       .get()
     persistDb()
     return result
   })
 
-  ipcMain.handle('budgets:archive', async (_e, id: number, archived: boolean) => {
-    const result = db
-      .update(schema.budgets)
+  ipcMain.handle('projects:archive', async (_e, id: number, archived: boolean) => {
+    db.update(schema.projects)
       .set({ archived, updatedAt: new Date() })
-      .where(eq(schema.budgets.id, id))
+      .where(eq(schema.projects.id, id))
+      .run()
+    persistDb()
+    return { ok: true }
+  })
+
+  ipcMain.handle('projects:reorder', async (_e, params: { id: number; status: string; sortOrder: number }[]) => {
+    const now = new Date()
+    for (const item of params) {
+      db.update(schema.projects)
+        .set({ status: item.status, sortOrder: item.sortOrder, updatedAt: now })
+        .where(eq(schema.projects.id, item.id))
+        .run()
+    }
+    persistDb()
+    return { ok: true }
+  })
+
+  // --- Members ---
+  ipcMain.handle('project_members:list', (_e, projectId: number) => {
+    return db.select().from(schema.projectMembers).where(eq(schema.projectMembers.projectId, projectId)).all()
+  })
+
+  ipcMain.handle('project_members:add', async (_e, projectId: number, member: Omit<schema.NewProjectMember, 'projectId'>) => {
+    const result = db.insert(schema.projectMembers).values({ ...member, projectId }).returning().get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('project_members:remove', async (_e, id: number) => {
+    db.delete(schema.projectMembers).where(eq(schema.projectMembers.id, id)).run()
+    persistDb()
+    return { ok: true }
+  })
+
+  // --- Tags ---
+  ipcMain.handle('project_tags:list', (_e, projectId: number) => {
+    return db.select().from(schema.projectTags).where(eq(schema.projectTags.projectId, projectId)).all()
+  })
+
+  ipcMain.handle('project_tags:add', async (_e, projectId: number, tag: Omit<schema.NewProjectTag, 'projectId'>) => {
+    const result = db.insert(schema.projectTags).values({ ...tag, projectId }).returning().get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('project_tags:remove', async (_e, id: number) => {
+    db.delete(schema.projectTags).where(eq(schema.projectTags.id, id)).run()
+    persistDb()
+    return { ok: true }
+  })
+
+  // --- Comments ---
+  ipcMain.handle('project_comments:list', (_e, projectId: number) => {
+    return db
+      .select()
+      .from(schema.projectComments)
+      .where(eq(schema.projectComments.projectId, projectId))
+      .orderBy(schema.projectComments.createdAt)
+      .all()
+  })
+
+  ipcMain.handle('project_comments:add', async (_e, projectId: number, content: string, author = 'You') => {
+    const result = db
+      .insert(schema.projectComments)
+      .values({ projectId, content, author, createdAt: new Date() })
       .returning()
       .get()
     persistDb()
     return result
   })
 
-  ipcMain.handle('budgets:delete', async (_e, id: number) => {
-    db.delete(schema.budgets).where(eq(schema.budgets.id, id)).run()
+  ipcMain.handle('project_comments:delete', async (_e, id: number) => {
+    db.delete(schema.projectComments).where(eq(schema.projectComments.id, id)).run()
+    persistDb()
+    return { ok: true }
+  })
+
+  // --- Subitems ---
+  ipcMain.handle('project_subitems:list', (_e, projectId: number) => {
+    return db
+      .select()
+      .from(schema.projectSubitems)
+      .where(eq(schema.projectSubitems.projectId, projectId))
+      .orderBy(schema.projectSubitems.sortOrder)
+      .all()
+  })
+
+  ipcMain.handle('project_subitems:add', async (_e, projectId: number, data: Omit<schema.NewProjectSubitem, 'projectId'>) => {
+    const result = db.insert(schema.projectSubitems).values({ ...data, projectId, createdAt: new Date() }).returning().get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('project_subitems:update', async (_e, id: number, data: Partial<schema.NewProjectSubitem>) => {
+    const result = db
+      .update(schema.projectSubitems)
+      .set(data)
+      .where(eq(schema.projectSubitems.id, id))
+      .returning()
+      .get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('project_subitems:delete', async (_e, id: number) => {
+    db.delete(schema.projectSubitems).where(eq(schema.projectSubitems.id, id)).run()
     persistDb()
     return { ok: true }
   })

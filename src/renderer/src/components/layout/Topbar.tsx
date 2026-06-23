@@ -19,6 +19,7 @@ export function Topbar() {
     '/focus': 'nav.focus',
     '/goals': 'nav.goals',
     '/finance': 'nav.finance',
+    '/projects': 'nav.projects',
     '/settings': 'nav.settings'
   }
 

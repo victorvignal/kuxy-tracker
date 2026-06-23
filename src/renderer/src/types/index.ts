@@ -79,7 +79,6 @@ export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'ca
 
 export interface Account {
   id: number
-  profileId?: number
   name: string
   type: AccountType
   balance: number // centavos
@@ -118,7 +117,6 @@ export type SubscriptionInterval = 'monthly' | 'yearly' | 'weekly'
 
 export interface Subscription {
   id: number
-  profileId?: number
   accountId: number | null
   categoryId: number | null
   name: string
@@ -131,27 +129,67 @@ export interface Subscription {
   createdAt: number | Date
 }
 
-export type BudgetPeriod = 'weekly' | 'monthly' | 'yearly'
-export type BudgetStatus = 'ok' | 'warning' | 'exceeded'
+// ============================================================
+// PROJECTS (v0.4.0)
+// ============================================================
 
-export interface Budget {
+export type ProjectStatus = 'todo' | 'in_progress' | 'in_review' | 'completed'
+export type ProjectPriority = 1 | 2 | 3
+
+export interface Project {
   id: number
-  profileId?: number
-  categoryId: number
-  name: string | null
-  amount: number // centavos
-  period: BudgetPeriod
-  rollover: boolean
-  alertThreshold: number // 0-100
-  startDate: string // YYYY-MM-DD
+  emoji: string | null
+  name: string
+  client: string | null
+  description: string | null
+  status: ProjectStatus
+  priority: ProjectPriority
+  progress: number // 0-100
+  sortOrder: number
+  dueDate: string | null
+  person: string | null
+  youtubeUrl: string | null
+  googleDriveUrl: string | null
+  tiktokUrl: string | null
+  notes: string | null
   archived: boolean
   createdAt: number | Date
   updatedAt: number | Date
-  // Computed pelo backend (budgets:list)
-  spent?: number
-  pct?: number
-  daysRemaining?: number
-  status?: BudgetStatus
-  periodFrom?: string
-  periodTo?: string
+}
+
+export interface ProjectMember {
+  id: number
+  projectId: number
+  name: string
+  initials: string | null
+  color: string
+}
+
+export interface ProjectTag {
+  id: number
+  projectId: number
+  label: string
+  color: string
+}
+
+export interface ProjectComment {
+  id: number
+  projectId: number
+  author: string
+  content: string
+  createdAt: number | Date
+}
+
+export type ProjectSubitemStatus = 'idea' | 'working' | 'editor' | 'done'
+
+export interface ProjectSubitem {
+  id: number
+  projectId: number
+  name: string
+  thumbnailUrl: string | null
+  status: ProjectSubitemStatus
+  dueDate: string | null
+  postDate: string | null
+  sortOrder: number
+  createdAt: number | Date
 }

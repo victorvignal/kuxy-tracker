@@ -232,19 +232,62 @@ export async function getDb(): Promise<DrizzleDb> {
       created_at INTEGER NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS budgets (
+    -- Projects module (v0.4.0) — board Kanban estilo Notion no perfil Profissional
+    CREATE TABLE IF NOT EXISTS projects (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
-      category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-      name TEXT,
-      amount INTEGER NOT NULL,
-      period TEXT NOT NULL DEFAULT 'monthly',
-      rollover INTEGER NOT NULL DEFAULT 0,
-      alert_threshold INTEGER NOT NULL DEFAULT 80,
-      start_date TEXT NOT NULL,
+      emoji TEXT DEFAULT '📁',
+      name TEXT NOT NULL,
+      client TEXT,
+      description TEXT,
+      status TEXT NOT NULL DEFAULT 'todo',
+      priority INTEGER NOT NULL DEFAULT 2,
+      progress INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      due_date TEXT,
+      person TEXT,
+      youtube_url TEXT,
+      google_drive_url TEXT,
+      tiktok_url TEXT,
+      notes TEXT,
       archived INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS project_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      initials TEXT,
+      color TEXT NOT NULL DEFAULT '#8b5cf6'
+    );
+
+    CREATE TABLE IF NOT EXISTS project_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      label TEXT NOT NULL,
+      color TEXT NOT NULL DEFAULT '#8b5cf6'
+    );
+
+    CREATE TABLE IF NOT EXISTS project_comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      author TEXT NOT NULL DEFAULT 'You',
+      content TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS project_subitems (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      thumbnail_url TEXT,
+      status TEXT NOT NULL DEFAULT 'idea',
+      due_date TEXT,
+      post_date TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
@@ -252,8 +295,11 @@ export async function getDb(): Promise<DrizzleDb> {
     CREATE INDEX IF NOT EXISTS idx_accounts_profile ON accounts(profile_id);
     CREATE INDEX IF NOT EXISTS idx_categories_profile ON categories(profile_id);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_profile ON subscriptions(profile_id);
-    CREATE INDEX IF NOT EXISTS idx_budgets_profile ON budgets(profile_id);
-    CREATE INDEX IF NOT EXISTS idx_budgets_category ON budgets(category_id);
+    CREATE INDEX IF NOT EXISTS idx_projects_profile_status ON projects(profile_id, status, sort_order);
+    CREATE INDEX IF NOT EXISTS idx_subitems_project ON project_subitems(project_id, sort_order);
+    CREATE INDEX IF NOT EXISTS idx_members_project ON project_members(project_id);
+    CREATE INDEX IF NOT EXISTS idx_tags_project ON project_tags(project_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_project ON project_comments(project_id);
   `)
 
   // Seed default categories + a checking account per profile, caso a tabela
@@ -323,6 +369,20 @@ export async function getDb(): Promise<DrizzleDb> {
     safeExec(`UPDATE routines SET profile_id = ${personalId} WHERE profile_id NOT IN (SELECT id FROM profiles)`)
     safeExec(`UPDATE journal_entries SET profile_id = ${personalId} WHERE profile_id NOT IN (SELECT id FROM profiles)`)
     safeExec(`UPDATE focus_sessions SET profile_id = ${personalId} WHERE profile_id NOT IN (SELECT id FROM profiles)`)
+  }
+
+  // Migration: adiciona /projects ao sidebar_items do perfil Profissional
+  // pra users que já tinham o app instalado antes desse módulo existir.
+  // Sem isso, o item só apareceria pra profiles criados depois do deploy.
+  const profProfile = rawDb.exec(`SELECT id, sidebar_items FROM profiles WHERE slug='professional' LIMIT 1`)[0]
+  const profRow = profProfile?.values?.[0]
+  if (profRow) {
+    const profId = profRow[0] as number
+    const items = JSON.parse((profRow[1] as string) || '[]') as string[]
+    if (!items.includes('/projects')) {
+      items.push('/projects')
+      rawDb.run(`UPDATE profiles SET sidebar_items = ? WHERE id = ?`, [JSON.stringify(items), profId])
+    }
   }
 
   dbInstance = drizzle(rawDb, { schema })
