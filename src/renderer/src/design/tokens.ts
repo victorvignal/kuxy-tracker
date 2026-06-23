@@ -116,7 +116,7 @@ export const DARK: Theme = {
     topbarHeight: '56px'
   },
   font: {
-    sans: '"Inter", system-ui, -apple-system, sans-serif',
+    sans: '"Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif',
     mono: '"JetBrains Mono", ui-monospace, monospace'
   },
   shadow: {

@@ -39,7 +39,7 @@ export default {
         warning: 'var(--color-warning)'
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+        sans: ['Inter', 'Segoe UI', 'system-ui', '-apple-system', 'Helvetica Neue', 'Arial', 'sans-serif']
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

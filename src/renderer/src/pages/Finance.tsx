@@ -477,8 +477,11 @@ export function Finance() {
           </button>
         </div>
         {budgets.length === 0 ? (
-          <div className="py-6 text-center text-text-subtle text-xs">
-            {t('finance.budget.no_category')}
+          <div className="py-8 text-center">
+            <div className="text-sm text-text mb-1">{t('finance.budget.empty')}</div>
+            <div className="text-xs text-text-subtle">
+              {t('finance.budget.empty_hint')}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
