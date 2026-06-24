@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import {
-  Filter,
   ShoppingBag,
   Coffee,
   Car,
   Home,
   Heart,
   Tv,
+  Plus,
   type LucideIcon
 } from 'lucide-react'
+import { useProfileStore } from '../store/useProfile'
+import { useFinanceData } from '../hooks/useFinanceData'
+import { TransactionDialog } from '../components/finance/TransactionDialog'
+import type { Account, Category as CategoryT } from '../types'
 
 /**
  * Spending — breakdown de gastos por categoria (versão nova do Finance).
@@ -17,7 +21,7 @@ import {
  * categorias com barra de progresso + valores. Filtros no topo.
  */
 
-type Category = {
+type CategoryRow = {
   id: string
   name: string
   Icon: LucideIcon
@@ -28,7 +32,7 @@ type Category = {
   change: string
 }
 
-const CATEGORIES: Category[] = [
+const CATEGORIES: CategoryRow[] = [
   { id: '1', name: 'Housing', Icon: Home, color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', spent: 3200, budget: 3200, change: '0%' },
   { id: '2', name: 'Food', Icon: ShoppingBag, color: '#f472b6', bg: 'rgba(244,114,182,0.12)', spent: 980, budget: 900, change: '+9%' },
   { id: '3', name: 'Transport', Icon: Car, color: '#22d3ee', bg: 'rgba(34,211,238,0.12)', spent: 450, budget: 400, change: '+13%' },
@@ -38,6 +42,9 @@ const CATEGORIES: Category[] = [
 ]
 
 export function Spending() {
+  const active = useProfileStore((s) => s.getActive())
+  const { accounts, categories } = useFinanceData()
+  const [showDialog, setShowDialog] = useState(false)
   const [filter, setFilter] = useState<'week' | 'month' | 'year'>('month')
 
   const totalSpent = CATEGORIES.reduce((a, c) => a + c.spent, 0)
@@ -78,10 +85,13 @@ export function Spending() {
             ))}
           </div>
           <button
-            className="flex items-center gap-[7px] h-[38px] px-[14px] rounded-[9px] text-[13px] font-medium"
+            onClick={() => setShowDialog(true)}
+            disabled={accounts.length === 0}
+            title={accounts.length === 0 ? 'Crie uma conta primeiro' : 'Nova despesa'}
+            className="flex items-center gap-[7px] h-[38px] px-[14px] rounded-[9px] text-[13px] font-medium transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ background: '#161619', border: '1px solid #232327', color: '#e8e8ea' }}
           >
-            <Filter size={16} strokeWidth={1.75} />
+            <Plus size={16} strokeWidth={1.75} />
             Filters
           </button>
         </div>
@@ -214,6 +224,17 @@ export function Spending() {
           </div>
         </div>
       </div>
+
+      {showDialog && active && (
+        <TransactionDialog
+          onClose={() => setShowDialog(false)}
+          onSaved={() => setShowDialog(false)}
+          accounts={accounts as unknown as Account[]}
+          categories={categories as unknown as CategoryT[]}
+          profileId={active.id}
+          defaultType="expense"
+        />
+      )}
     </div>
   )
 }

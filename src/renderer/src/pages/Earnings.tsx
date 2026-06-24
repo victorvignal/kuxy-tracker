@@ -7,6 +7,11 @@ import {
   Plus
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useState } from 'react'
+import { useProfileStore } from '../store/useProfile'
+import { useFinanceData } from '../hooks/useFinanceData'
+import { TransactionDialog } from '../components/finance/TransactionDialog'
+import type { Account, Category } from '../types'
 
 /**
  * Earnings — fontes de receita do usuário.
@@ -39,6 +44,9 @@ const SOURCES: Source[] = [
 ]
 
 export function Earnings() {
+  const active = useProfileStore((s) => s.getActive())
+  const { accounts, categories } = useFinanceData()
+  const [showDialog, setShowDialog] = useState(false)
   const total = SOURCES.reduce((a, s) => a + parseFloat(s.amount.replace(/[^0-9]/g, '')), 0)
   const monthly = SOURCES.filter((s) => s.sub.startsWith('Monthly')).reduce((a, s) => a + parseFloat(s.amount.replace(/[^0-9]/g, '')), 0)
 
@@ -93,7 +101,10 @@ export function Earnings() {
               {SOURCES.length} Sources
             </span>
             <button
-              className="flex items-center gap-[7px] h-[32px] px-3 rounded-[8px] text-tmpl-body-xs font-medium"
+              onClick={() => setShowDialog(true)}
+              disabled={accounts.length === 0}
+              title={accounts.length === 0 ? 'Crie uma conta primeiro' : 'Nova receita'}
+              className="flex items-center gap-[7px] h-[32px] px-3 rounded-[8px] text-tmpl-body-xs font-medium transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ background: '#161619', border: '1px solid #232327', color: '#e8e8ea' }}
             >
               <Plus size={14} strokeWidth={1.75} />
@@ -135,6 +146,17 @@ export function Earnings() {
           </div>
         </div>
       </div>
+
+      {showDialog && active && (
+        <TransactionDialog
+          onClose={() => setShowDialog(false)}
+          onSaved={() => setShowDialog(false)}
+          accounts={accounts as unknown as Account[]}
+          categories={categories as unknown as Category[]}
+          profileId={active.id}
+          defaultType="income"
+        />
+      )}
     </div>
   )
 }

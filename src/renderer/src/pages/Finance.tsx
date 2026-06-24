@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import {
   Wallet,
   TrendingUp,
@@ -6,7 +6,6 @@ import {
   CircleDollarSign,
   Plus,
   Trash2,
-  X,
   Settings2,
   Pencil,
   Pause,
@@ -17,13 +16,14 @@ import {
   CheckCircle2
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Area, AreaChart } from 'recharts'
-import { rangeStr, todayStr, cn } from '../lib/utils'
+import { rangeStr, cn } from '../lib/utils'
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
 import type { Account, Budget, Category, Subscription, Transaction } from '../types'
 import { AccountDialog } from '../components/finance/AccountDialog'
 import { SubscriptionDialog } from '../components/finance/SubscriptionDialog'
 import { BudgetDialog } from '../components/finance/BudgetDialog'
+import { TransactionDialog } from '../components/finance/TransactionDialog'
 
 // Formata centavos pra string em reais. Ex: 12345 -> "R$ 123,45"
 function fmtBRL(cents: number): string {
@@ -110,7 +110,7 @@ export function Finance() {
     return Array.from(map.entries())
       .map(([catId, total]) => {
         const cat = categories.find((c) => c.id === catId)
-        return { catId, total, name: cat?.name ?? '—', color: cat?.color ?? '#8b5cf6' }
+        return { catId, total, name: cat?.name ?? 'â€”', color: cat?.color ?? '#8b5cf6' }
       })
       .sort((a, b) => b.total - a.total)
   }, [transactions, categories])
@@ -209,25 +209,25 @@ export function Finance() {
         <StatCard
           icon={<Wallet className="w-4 h-4" />}
           label={t('finance.balance')}
-          value={overview ? fmtBRLCompact(overview.totalBalance) : '—'}
+          value={overview ? fmtBRLCompact(overview.totalBalance) : 'â€”'}
           accent="text-text"
         />
         <StatCard
           icon={<TrendingUp className="w-4 h-4" />}
           label={t('finance.income')}
-          value={overview ? fmtBRLCompact(overview.income) : '—'}
+          value={overview ? fmtBRLCompact(overview.income) : 'â€”'}
           accent="text-success"
         />
         <StatCard
           icon={<TrendingDown className="w-4 h-4" />}
           label={t('finance.expense')}
-          value={overview ? fmtBRLCompact(overview.expense) : '—'}
+          value={overview ? fmtBRLCompact(overview.expense) : 'â€”'}
           accent="text-danger"
         />
         <StatCard
           icon={<CircleDollarSign className="w-4 h-4" />}
           label={t('finance.net')}
-          value={overview ? fmtBRLCompact(overview.net) : '—'}
+          value={overview ? fmtBRLCompact(overview.net) : 'â€”'}
           accent={overview && overview.net >= 0 ? 'text-success' : 'text-danger'}
         />
       </div>
@@ -288,7 +288,7 @@ export function Finance() {
         </div>
       )}
 
-      {/* Accounts list (v0.3.1 — gestão inline de contas) */}
+      {/* Accounts list (v0.3.1 â€” gestÃ£o inline de contas) */}
       {accounts.length > 0 && (
         <div className="bg-bg-card border border-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
@@ -405,8 +405,8 @@ export function Finance() {
                     </div>
                     <div className="text-[11px] text-text-subtle truncate">
                       {t(`finance.billing.${s.interval}`)}
-                      {acc ? ` • ${acc.name}` : ` • ${t('finance.subscription.no_account')}`}
-                      {s.nextBilling && ` • ${s.nextBilling}`}
+                      {acc ? ` â€¢ ${acc.name}` : ` â€¢ ${t('finance.subscription.no_account')}`}
+                      {s.nextBilling && ` â€¢ ${s.nextBilling}`}
                     </div>
                   </div>
                   <div className="text-sm font-medium text-text tabular-nums">{fmtBRL(s.amount)}</div>
@@ -528,7 +528,7 @@ export function Finance() {
                       </div>
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-text truncate">
-                          {b.name || cat?.name || '—'}
+                          {b.name || cat?.name || 'â€”'}
                         </div>
                         <div className="text-[11px] text-text-muted truncate">
                           {cat?.name && b.name ? cat.name : t(`finance.budget.period.${b.period}`)}
@@ -584,7 +584,7 @@ export function Finance() {
                       {statusMeta.label}
                     </span>
                     <span className="text-text-subtle tabular-nums">
-                      {days} {t('finance.budget.days_remaining')} • {fmtBRL(remaining)}
+                      {days} {t('finance.budget.days_remaining')} â€¢ {fmtBRL(remaining)}
                     </span>
                   </div>
                 </div>
@@ -628,7 +628,7 @@ export function Finance() {
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-text truncate">{tx.description}</div>
                       <div className="text-[11px] text-text-subtle">
-                        {cat?.name ?? '—'} · {acc?.name ?? '—'} · {tx.date}
+                        {cat?.name ?? 'â€”'} Â· {acc?.name ?? 'â€”'} Â· {tx.date}
                       </div>
                     </div>
                     <div
@@ -637,7 +637,7 @@ export function Finance() {
                         tx.type === 'income' ? 'text-success' : 'text-danger'
                       )}
                     >
-                      {tx.type === 'income' ? '+' : '−'}
+                      {tx.type === 'income' ? '+' : 'âˆ’'}
                       {fmtBRL(tx.amount)}
                     </div>
                     <button
@@ -722,14 +722,14 @@ export function Finance() {
       </div>
 
       {showAdd && (
-        <AddTransactionDialog
+        <TransactionDialog
           onClose={() => setShowAdd(false)}
           onSaved={async () => {
             setShowAdd(false)
             await load()
           }}
-          accounts={accounts}
-          categories={categories}
+          accounts={accounts as any}
+          categories={categories as any}
           profileId={activeProfile?.id ?? 1}
         />
       )}
@@ -807,178 +807,3 @@ function StatCard({
   )
 }
 
-function AddTransactionDialog({
-  onClose,
-  onSaved,
-  accounts,
-  categories,
-  profileId
-}: {
-  onClose: () => void
-  onSaved: () => void | Promise<void>
-  accounts: Account[]
-  categories: Category[]
-  profileId: number
-}) {
-  const t = useT()
-  const [type, setType] = useState<'income' | 'expense'>('expense')
-  const [amount, setAmount] = useState('')
-  const [description, setDescription] = useState('')
-  const [accountId, setAccountId] = useState(accounts[0]?.id ?? 0)
-  const [categoryId, setCategoryId] = useState<number | null>(null)
-  const [date, setDate] = useState(todayStr())
-  const [saving, setSaving] = useState(false)
-
-  const filteredCategories = categories.filter((c) => c.type === type)
-  const effectiveCategoryId = categoryId && filteredCategories.find((c) => c.id === categoryId)
-    ? categoryId
-    : filteredCategories[0]?.id ?? null
-
-  const submit = async () => {
-    if (!effectiveCategoryId || !accountId || !amount || !description) return
-    const cents = Math.round(parseFloat(amount.replace(',', '.')) * 100)
-    if (!Number.isFinite(cents) || cents <= 0) return
-    setSaving(true)
-    await window.api.finance.transactions.create({
-      profileId,
-      accountId,
-      categoryId: effectiveCategoryId,
-      type,
-      amount: cents,
-      description,
-      date,
-      notes: null
-    })
-    setSaving(false)
-    await onSaved()
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'var(--color-scrim)' }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-bg-card border border-border rounded-xl w-full max-w-md p-5 space-y-4 shadow-pop"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">{t('finance.new_transaction')}</h2>
-          <button onClick={onClose} className="p-1 rounded hover:bg-bg-hover text-text-muted">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Type toggle */}
-        <div className="flex bg-bg-subtle border border-border rounded-lg p-0.5">
-          {(['expense', 'income'] as const).map((tt) => (
-            <button
-              key={tt}
-              onClick={() => {
-                setType(tt)
-                setCategoryId(null)
-              }}
-              className={cn(
-                'flex-1 py-1.5 text-xs font-medium rounded-md transition-colors',
-                type === tt
-                  ? tt === 'income'
-                    ? 'bg-success/15 text-success'
-                    : 'bg-danger/15 text-danger'
-                  : 'text-text-muted hover:text-text'
-              )}
-            >
-              {tt === 'income' ? t('finance.type.income') : t('finance.type.expense')}
-            </button>
-          ))}
-        </div>
-
-        {/* Amount */}
-        <div>
-          <label className="text-xs text-text-muted mb-1 block">{t('finance.amount')}</label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle text-sm">
-              R$
-            </span>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0,00"
-              className="w-full bg-bg-subtle border border-border rounded-lg pl-10 pr-3 py-2 text-sm placeholder:text-text-subtle focus:outline-none focus:border-accent"
-              autoFocus
-            />
-          </div>
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="text-xs text-text-muted mb-1 block">{t('finance.description')}</label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="ex. Almoço, Salário..."
-            className="w-full bg-bg-subtle border border-border rounded-lg px-3 py-2 text-sm placeholder:text-text-subtle focus:outline-none focus:border-accent"
-          />
-        </div>
-
-        {/* Account + Category + Date */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-text-muted mb-1 block">{t('finance.account')}</label>
-            <select
-              value={accountId}
-              onChange={(e) => setAccountId(Number(e.target.value))}
-              className="w-full bg-bg-subtle border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
-            >
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-text-muted mb-1 block">{t('finance.category')}</label>
-            <select
-              value={effectiveCategoryId ?? ''}
-              onChange={(e) => setCategoryId(Number(e.target.value))}
-              className="w-full bg-bg-subtle border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
-            >
-              {filteredCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="text-xs text-text-muted mb-1 block">{t('finance.date')}</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full bg-bg-subtle border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
-          />
-        </div>
-
-        <div className="flex gap-2 pt-2">
-          <button onClick={onClose} className="btn btn-ghost flex-1">
-            {t('common.cancel')}
-          </button>
-          <button
-            onClick={submit}
-            disabled={saving || !amount || !description || !effectiveCategoryId}
-            className="btn btn-primary flex-1"
-          >
-            {saving ? t('common.loading') : t('common.save')}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
