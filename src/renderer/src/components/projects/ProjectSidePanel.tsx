@@ -252,38 +252,38 @@ export function ProjectSidePanel({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Status badge */}
-          <div className="px-5 py-3 border-b border-border">
-            <span
-              className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold"
-              style={{
-                background: `${STATUS_COLOR[status]}1f`,
-                color: STATUS_COLOR[status]
-              }}
-            >
-              {t(`projects.column.${status === 'in_progress' ? 'in_progress' : status === 'in_review' ? 'in_review' : status === 'completed' ? 'completed' : 'todo'}`)}
-            </span>
-          </div>
+          {/* (status badge movido pra dentro das properties, abaixo) */}
 
           {/* Properties */}
           <div className="px-5 py-3 border-b border-border space-y-2.5">
-            {/* Status row */}
+            {/* Status row — pill colorido estilo Notion */}
             <PropRow label={t('projects.column.todo').replace('To Do', 'Status')}>
-              <select
-                value={status}
-                onChange={(e) => {
-                  const v = e.target.value as ProjectStatus
-                  setStatus(v)
-                  saveField('status', v)
-                }}
-                className="w-full bg-bg-subtle border border-border rounded px-2 py-1 text-xs text-text focus:outline-none focus:border-accent"
-              >
-                {(['todo', 'in_progress', 'in_review', 'completed'] as ProjectStatus[]).map((s) => (
-                  <option key={s} value={s}>
-                    {t(`projects.column.${s === 'in_progress' ? 'in_progress' : s === 'in_review' ? 'in_review' : s}`)}
-                  </option>
-                ))}
-              </select>
+              <div className="relative group">
+                <select
+                  value={status}
+                  onChange={(e) => {
+                    const v = e.target.value as ProjectStatus
+                    setStatus(v)
+                    saveField('status', v)
+                  }}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                >
+                  {(['todo', 'in_progress', 'in_review', 'completed'] as ProjectStatus[]).map((s) => (
+                    <option key={s} value={s}>
+                      {t(`projects.column.${s === 'in_progress' ? 'in_progress' : s === 'in_review' ? 'in_review' : s}`)}
+                    </option>
+                  ))}
+                </select>
+                <span
+                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity"
+                  style={{
+                    background: `${STATUS_COLOR[status]}26`,
+                    color: STATUS_COLOR[status]
+                  }}
+                >
+                  {t(`projects.column.${status === 'in_progress' ? 'in_progress' : status === 'in_review' ? 'in_review' : status === 'completed' ? 'completed' : 'todo'}`)}
+                </span>
+              </div>
             </PropRow>
 
             {/* Notes */}
@@ -487,6 +487,63 @@ export function ProjectSidePanel({
             )}
           </div>
 
+          {/* Comments (Notion: vem ANTES das sub-items) */}
+          <div className="px-5 py-3 border-b border-border">
+            <h3 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
+              <MessageSquare className="w-3.5 h-3.5" />
+              {t('projects.comments')}
+            </h3>
+
+            {comments.length === 0 ? (
+              <p className="text-xs text-text-subtle mb-3">{t('common.empty')}</p>
+            ) : (
+              <div className="space-y-3 mb-3">
+                {comments.map((c) => (
+                  <div key={c.id} className="flex gap-2 group">
+                    <div
+                      className="w-6 h-6 rounded-full bg-accent/30 text-accent text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5"
+                    >
+                      {c.author.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[11px] font-semibold text-text">{c.author}</span>
+                        <span className="text-[10px] text-text-subtle">
+                          {fmtDate(String(c.createdAt), 'MMM d, yyyy')}
+                        </span>
+                        <button
+                          onClick={() => deleteComment(c.id)}
+                          className="opacity-0 group-hover:opacity-100 text-text-subtle hover:text-danger p-0.5 ml-auto"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-text leading-relaxed">{c.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add comment */}
+            <div className="flex gap-2">
+              <input
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitComment() }}
+                placeholder={t('projects.comment_placeholder')}
+                className="flex-1 bg-bg-subtle border border-border rounded-lg px-3 py-2 text-xs text-text placeholder:text-text-subtle focus:outline-none focus:border-accent"
+              />
+              <button
+                onClick={submitComment}
+                disabled={addingComment || !newComment.trim()}
+                className="btn btn-primary text-xs"
+              >
+                {t('projects.add_comment')}
+              </button>
+            </div>
+          </div>
+
           {/* Sub-items */}
           {subitems.length > 0 && (
             <div className="px-5 py-3 border-b border-border">
@@ -609,61 +666,17 @@ export function ProjectSidePanel({
             </div>
           )}
 
-          {/* Comments */}
-          <div className="px-5 py-3">
-            <h3 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
-              <MessageSquare className="w-3.5 h-3.5" />
-              {t('projects.comments')}
-            </h3>
-
-            {comments.length === 0 ? (
-              <p className="text-xs text-text-subtle mb-3">{t('common.empty')}</p>
-            ) : (
-              <div className="space-y-3 mb-3">
-                {comments.map((c) => (
-                  <div key={c.id} className="flex gap-2 group">
-                    <div
-                      className="w-6 h-6 rounded-full bg-accent/30 text-accent text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5"
-                    >
-                      {c.author.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[11px] font-semibold text-text">{c.author}</span>
-                        <span className="text-[10px] text-text-subtle">
-                          {fmtDate(String(c.createdAt), 'MMM d, yyyy')}
-                        </span>
-                        <button
-                          onClick={() => deleteComment(c.id)}
-                          className="opacity-0 group-hover:opacity-100 text-text-subtle hover:text-danger p-0.5 ml-auto"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                      <p className="text-xs text-text leading-relaxed">{c.content}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add comment */}
-            <div className="flex gap-2">
-              <input
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') submitComment() }}
-                placeholder={t('projects.comment_placeholder')}
-                className="flex-1 bg-bg-subtle border border-border rounded-lg px-3 py-2 text-xs text-text placeholder:text-text-subtle focus:outline-none focus:border-accent"
-              />
-              <button
-                onClick={submitComment}
-                disabled={addingComment || !newComment.trim()}
-                className="btn btn-primary text-xs"
-              >
-                {t('projects.add_comment')}
-              </button>
-            </div>
+          {/* Sub-tabs estilo Notion (placeholder por enquanto — Calendário/Atividade/etc) */}
+          <div className="px-5 pt-3 pb-2 flex items-center gap-1 border-b border-border">
+            <button className="text-[11px] px-2 py-1 rounded text-text font-medium bg-bg-hover">
+              {project.name}
+            </button>
+            <button className="text-[11px] px-2 py-1 rounded text-text-subtle hover:text-text hover:bg-bg-hover transition-colors">
+              Calendar
+            </button>
+            <button className="text-[11px] px-2 py-1 rounded text-text-subtle hover:text-text hover:bg-bg-hover transition-colors flex items-center gap-1">
+              <Plus className="w-3 h-3" />
+            </button>
           </div>
         </div>
       </div>

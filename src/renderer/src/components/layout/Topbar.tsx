@@ -8,6 +8,12 @@ import {
 } from 'lucide-react'
 import { useT } from '../../lib/i18n'
 import { NewHabitDialog } from '../habits/NewHabitDialog'
+import { NewProjectDialog } from '../projects/NewProjectDialog'
+import { SubscriptionDialog } from '../finance/SubscriptionDialog'
+import { AccountDialog } from '../finance/AccountDialog'
+import { BudgetDialog } from '../finance/BudgetDialog'
+import { useProfileStore } from '../../store/useProfile'
+import { useFinanceData } from '../../hooks/useFinanceData'
 
 const TITLE_KEYS: Record<string, string> = {
   '/': 'nav.dashboard',
@@ -37,7 +43,35 @@ const TITLE_KEYS: Record<string, string> = {
 export function Topbar() {
   const location = useLocation()
   const t = useT()
+  const activeProfile = useProfileStore((s) => s.getActive())
+  const { accounts, categories } = useFinanceData()
   const [showNewHabit, setShowNewHabit] = useState(false)
+  const [showNewProject, setShowNewProject] = useState(false)
+  const [showNewSubscription, setShowNewSubscription] = useState(false)
+  const [showNewAccount, setShowNewAccount] = useState(false)
+  const [showNewBudget, setShowNewBudget] = useState(false)
+
+  // Mapeia rota atual → dialog que o "+ Add" deve abrir.
+  // Se não houver dialog pra rota, o botão fica escondido (não faz sentido
+  // criar nada em /notifications, /reports estáticos, etc).
+  const addHandler: (() => void) | null = (() => {
+    switch (location.pathname) {
+      case '/habits':
+        return () => setShowNewHabit(true)
+      case '/projects':
+        return () => setShowNewProject(true)
+      case '/subscriptions':
+        return () => setShowNewSubscription(true)
+      case '/finance':
+      case '/transactions':
+        return () => setShowNewAccount(true)
+      case '/earnings':
+      case '/spending':
+        return () => setShowNewBudget(true)
+      default:
+        return null
+    }
+  })()
 
   // ⌘K / Ctrl+K → foca a search bar
   useEffect(() => {
@@ -115,19 +149,21 @@ export function Topbar() {
         {/* Divisor */}
         <div className="w-px h-6" style={{ background: '#232327' }} />
 
-        {/* Botão Add (38px height, padding 0 14px, border-radius 9px) */}
-        <button
-          onClick={() => setShowNewHabit(true)}
-          className="flex items-center gap-[7px] h-[38px] px-[14px] rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
-          style={{
-            background: '#161619',
-            border: '1px solid #232327',
-            color: '#e8e8ea'
-          }}
-        >
-          Add
-          <Plus size={16} strokeWidth={1.75} />
-        </button>
+        {/* Botão Add (38px height, padding 0 14px, border-radius 9px) — contextual à rota */}
+        {addHandler && (
+          <button
+            onClick={addHandler}
+            className="flex items-center gap-[7px] h-[38px] px-[14px] rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
+            style={{
+              background: '#161619',
+              border: '1px solid #232327',
+              color: '#e8e8ea'
+            }}
+          >
+            Add
+            <Plus size={16} strokeWidth={1.75} />
+          </button>
+        )}
 
         {/* Botão Invite (38px height, padding 0 16px, border-radius 9px) */}
         <button
@@ -145,6 +181,39 @@ export function Topbar() {
       </header>
 
       {showNewHabit && <NewHabitDialog onClose={() => setShowNewHabit(false)} />}
+
+      {showNewProject && activeProfile && (
+        <NewProjectDialog
+          onClose={() => setShowNewProject(false)}
+          onCreated={() => setShowNewProject(false)}
+          profileId={activeProfile.id}
+          initialStatus="todo"
+        />
+      )}
+
+      {showNewSubscription && activeProfile && (
+        <SubscriptionDialog
+          onClose={() => setShowNewSubscription(false)}
+          onSaved={() => setShowNewSubscription(false)}
+          accounts={accounts as any}
+          categories={categories as any}
+        />
+      )}
+
+      {showNewAccount && activeProfile && (
+        <AccountDialog
+          onClose={() => setShowNewAccount(false)}
+          onSaved={() => setShowNewAccount(false)}
+        />
+      )}
+
+      {showNewBudget && activeProfile && (
+        <BudgetDialog
+          onClose={() => setShowNewBudget(false)}
+          onSaved={() => setShowNewBudget(false)}
+          categories={categories as any}
+        />
+      )}
     </>
   )
 }

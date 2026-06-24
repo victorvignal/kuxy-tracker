@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
+import { useFinanceData } from '../hooks/useFinanceData'
 import {
   Wallet,
   PiggyBank,
@@ -12,8 +13,16 @@ import {
   ChevronRight,
   Upload,
   ChevronDown,
+  CreditCard,
+  Wallet as WalletIcon,
+  PiggyBank as PiggyIcon,
+  FolderKanban,
   type LucideIcon
 } from 'lucide-react'
+import { AccountDialog } from '../components/finance/AccountDialog'
+import { SubscriptionDialog } from '../components/finance/SubscriptionDialog'
+import { BudgetDialog } from '../components/finance/BudgetDialog'
+import { NewProjectDialog } from '../components/projects/NewProjectDialog'
 // (não usa fmtBRL — valores são fixos pra comparar com template)
 
 /**
@@ -128,7 +137,37 @@ function StatCard({
 export function Dashboard() {
   const t = useT()
   const active = useProfileStore((s) => s.getActive())
+  const { accounts, categories } = useFinanceData()
   const [period, setPeriod] = useState<0 | 1 | 2>(0)
+
+  // Dropdown state do "+ New"
+  const [newMenuOpen, setNewMenuOpen] = useState(false)
+  const newMenuRef = useRef<HTMLDivElement>(null)
+
+  // Dialogs
+  const [showAccount, setShowAccount] = useState(false)
+  const [showSubscription, setShowSubscription] = useState(false)
+  const [showBudget, setShowBudget] = useState(false)
+  const [showProject, setShowProject] = useState(false)
+
+  useEffect(() => {
+    if (!newMenuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (newMenuRef.current && !newMenuRef.current.contains(e.target as Node)) {
+        setNewMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [newMenuOpen])
+
+  const handleNewAction = (action: 'account' | 'subscription' | 'budget' | 'project') => {
+    setNewMenuOpen(false)
+    if (action === 'account') setShowAccount(true)
+    else if (action === 'subscription') setShowSubscription(true)
+    else if (action === 'budget') setShowBudget(true)
+    else if (action === 'project') setShowProject(true)
+  }
 
   // Se for perfil Profissional, mostra placeholder simples
   if (active?.type === 'professional') {
@@ -177,17 +216,68 @@ export function Dashboard() {
               <Upload size={16} strokeWidth={1.75} />
               Export
             </button>
-            <div
-              className="flex items-center h-[38px] rounded-[9px] overflow-hidden"
-              style={{ background: '#161619', border: '1px solid #232327' }}
-            >
-              <button className="px-[14px] h-full text-[13px] font-medium" style={{ color: '#e8e8ea' }}>
-                New
-              </button>
-              <span className="h-full w-px" style={{ background: '#232327' }} />
-              <button className="px-[9px] h-full flex items-center" style={{ color: '#9a9aa0' }}>
-                <ChevronDown size={16} strokeWidth={1.75} />
-              </button>
+            <div className="relative" ref={newMenuRef}>
+              <div
+                className="flex items-center h-[38px] rounded-[9px] overflow-hidden"
+                style={{ background: '#161619', border: '1px solid #232327' }}
+              >
+                <button
+                  onClick={() => setNewMenuOpen((o) => !o)}
+                  className="px-[14px] h-full text-[13px] font-medium hover:opacity-80 transition-opacity"
+                  style={{ color: '#e8e8ea' }}
+                >
+                  New
+                </button>
+                <span className="h-full w-px" style={{ background: '#232327' }} />
+                <button
+                  onClick={() => setNewMenuOpen((o) => !o)}
+                  className="px-[9px] h-full flex items-center hover:opacity-80 transition-opacity"
+                  style={{ color: '#9a9aa0' }}
+                >
+                  <ChevronDown size={16} strokeWidth={1.75} />
+                </button>
+              </div>
+
+              {newMenuOpen && (
+                <div
+                  className="absolute right-0 top-[calc(100%+6px)] z-50 w-[220px] rounded-[12px] overflow-hidden shadow-pop"
+                  style={{ background: '#161619', border: '1px solid #232327' }}
+                >
+                  <button
+                    onClick={() => handleNewAction('account')}
+                    className="w-full flex items-center gap-[10px] px-[14px] py-[10px] text-[13px] text-left hover:opacity-80 transition-opacity"
+                    style={{ color: '#e8e8ea' }}
+                  >
+                    <WalletIcon size={15} color="#a78bfa" strokeWidth={1.75} />
+                    <span>New Account</span>
+                  </button>
+                  <button
+                    onClick={() => handleNewAction('subscription')}
+                    className="w-full flex items-center gap-[10px] px-[14px] py-[10px] text-[13px] text-left hover:opacity-80 transition-opacity"
+                    style={{ color: '#e8e8ea' }}
+                  >
+                    <CreditCard size={15} color="#4ade80" strokeWidth={1.75} />
+                    <span>New Subscription</span>
+                  </button>
+                  <button
+                    onClick={() => handleNewAction('budget')}
+                    className="w-full flex items-center gap-[10px] px-[14px] py-[10px] text-[13px] text-left hover:opacity-80 transition-opacity"
+                    style={{ color: '#e8e8ea' }}
+                  >
+                    <PiggyIcon size={15} color="#facc15" strokeWidth={1.75} />
+                    <span>New Budget</span>
+                  </button>
+                  <span className="block h-px mx-[10px]" style={{ background: '#232327' }} />
+                  <button
+                    onClick={() => handleNewAction('project')}
+                    className="w-full flex items-center gap-[10px] px-[14px] py-[10px] text-[13px] text-left hover:opacity-80 transition-opacity"
+                    style={{ color: '#e8e8ea' }}
+                  >
+                    <FolderKanban size={15} color="#60a5fa" strokeWidth={1.75} />
+                    <span>New Project</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -391,6 +481,37 @@ export function Dashboard() {
         {/* Contacts table — placeholder visual (Contacts.tsx separado) */}
         <ContactsTable />
       </div>
+
+      {/* Dialogs do "+ New" dropdown */}
+      {showAccount && active && (
+        <AccountDialog
+          onClose={() => setShowAccount(false)}
+          onSaved={() => setShowAccount(false)}
+        />
+      )}
+      {showSubscription && active && (
+        <SubscriptionDialog
+          onClose={() => setShowSubscription(false)}
+          onSaved={() => setShowSubscription(false)}
+          accounts={accounts as any}
+          categories={categories as any}
+        />
+      )}
+      {showBudget && active && (
+        <BudgetDialog
+          onClose={() => setShowBudget(false)}
+          onSaved={() => setShowBudget(false)}
+          categories={categories as any}
+        />
+      )}
+      {showProject && active && (
+        <NewProjectDialog
+          onClose={() => setShowProject(false)}
+          onCreated={() => setShowProject(false)}
+          profileId={active.id}
+          initialStatus="todo"
+        />
+      )}
     </div>
   )
 }

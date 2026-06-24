@@ -14,11 +14,13 @@ import {
   MessageSquare,
   Zap,
   ChevronsUpDown,
-  ChevronRight
+  ChevronRight,
+  FolderKanban
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useProfileStore } from '../../store/useProfile'
 import { useT } from '../../lib/i18n'
+import { ProfileSwitcher } from './ProfileSwitcher'
 
 type Item = {
   path: string
@@ -35,6 +37,7 @@ const MAIN_MENU: Item[] = [
   { path: '/reports', label: 'nav.reports', Icon: FileText },
   { path: '/transactions', label: 'nav.transactions', Icon: Landmark },
   { path: '/performance', label: 'nav.performance', Icon: Globe },
+  { path: '/projects', label: 'nav.projects', Icon: FolderKanban },
   { path: '/more', label: 'nav.more', Icon: MoreHorizontal }
 ]
 
@@ -55,7 +58,6 @@ const LEGACY_PATH_MAP: Record<string, Item> = {
   '/focus': { path: '/focus', label: 'nav.focus', Icon: LayoutDashboard },
   '/goals': { path: '/goals', label: 'nav.goals', Icon: LayoutDashboard },
   '/finance': { path: '/finance', label: 'nav.finance', Icon: Wallet },
-  '/projects': { path: '/projects', label: 'nav.projects', Icon: LayoutDashboard },
   '/contacts': { path: '/contacts', label: 'nav.contacts', Icon: LayoutDashboard }
 }
 
@@ -106,30 +108,9 @@ export function Sidebar() {
         padding: '22px 16px 16px'
       }}
     >
-      {/* Profile switcher (template: btn com avatar 30x30 + nome 19px/700/-.01em + ChevronsUpDown) */}
+      {/* Profile switcher — dropdown com lista de perfis + criar/editar */}
       <div className="relative mb-[26px]">
-        <button
-          onClick={() => navigate('/settings/profiles')}
-          className="flex items-center gap-[10px] py-[6px] px-2 rounded-[10px] cursor-pointer w-full text-left hover:bg-bg transition-colors"
-        >
-          {/* Avatar 30x30 com gradient + inner shadow + zap branco */}
-          <div
-            className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center shrink-0"
-            style={{
-              background: 'linear-gradient(150deg, #3a3a40, #161618)',
-              boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.18)'
-            }}
-          >
-            <Zap size={16} strokeWidth={0} fill="#fff" />
-          </div>
-          <span
-            className="text-[19px] font-bold tracking-[-.01em] flex-1 min-w-0 truncate"
-            style={{ color: '#fff' }}
-          >
-            {active?.name ?? t('profile.default_name')}
-          </span>
-          <ChevronsUpDown size={16} color="#6a6a70" />
-        </button>
+        <ProfileSwitcher />
       </div>
 
       {/* Main Menu heading (12px/500) */}
