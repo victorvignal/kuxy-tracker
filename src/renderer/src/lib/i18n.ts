@@ -346,7 +346,19 @@ const dicts: Record<Lang, Record<string, string>> = {
     // Dashboard tabs (bug fix)
     'tab.overview': 'Overview',
     'tab.today': 'Today',
-    'tab.insights': 'Insights'
+    'tab.insights': 'Insights',
+    'projects.title': 'Projects',
+    'projects.list': 'List',
+
+    'common.color': 'Color',
+    'finance.confirm_archive_account': 'Archive this account? Its transactions stay in history.',
+    'finance.confirm_delete_subscription': 'Delete this subscription?',
+    'finance.edit_account': 'Edit account',
+    'finance.edit_transaction': 'Edit transaction',
+    'finance.new_account': 'New account',
+    'finance.no_subscriptions': 'No subscriptions yet',
+    'nav.projects': 'Projects',
+
   },
   'pt-BR': {
     'app.name': 'KUXY',
@@ -605,9 +617,11 @@ const dicts: Record<Lang, Record<string, string>> = {
     'common.value': 'Valor',
     'common.count': 'Qtd',
     'common.date': 'Data',
+    'common.color': 'Cor',
 
     // Finance module (v0.3.0)
     'nav.finance': 'Finanças',
+    'nav.projects': 'Projetos',
     'finance.title': 'Finanças',
     'finance.subtitle_personal': 'Acompanhe seu dinheiro: contas, transações, assinaturas.',
     'finance.subtitle_professional': 'Acompanhe receitas e despesas do seu negócio.',
@@ -622,6 +636,7 @@ const dicts: Record<Lang, Record<string, string>> = {
     'finance.no_transactions': 'Nenhuma transação ainda',
     'finance.add_transaction': 'Adicionar transação',
     'finance.new_transaction': 'Nova transação',
+    'finance.edit_transaction': 'Editar transação',
     'finance.type': 'Tipo',
     'finance.type.income': 'Receita',
     'finance.type.expense': 'Despesa',
@@ -638,6 +653,8 @@ const dicts: Record<Lang, Record<string, string>> = {
     'finance.subscriptions': 'Assinaturas',
     'finance.subscriptions_total': 'Total mensal',
     'finance.add_subscription': 'Adicionar assinatura',
+    'finance.confirm_delete_subscription': 'Excluir esta assinatura?',
+    'finance.no_subscriptions': 'Nenhuma assinatura ainda',
     'finance.next_billing': 'Próxima cobrança',
     'finance.billing.monthly': 'Mensal',
     'finance.billing.yearly': 'Anual',
@@ -647,6 +664,9 @@ const dicts: Record<Lang, Record<string, string>> = {
     'finance.subscription.no_account': 'Sem conta vinculada',
     'finance.accounts': 'Contas',
     'finance.add_account': 'Adicionar conta',
+    'finance.confirm_archive_account': 'Arquivar esta conta? As transações continuam no histórico.',
+    'finance.edit_account': 'Editar conta',
+    'finance.new_account': 'Nova conta',
     'finance.account.checking': 'Corrente',
     'finance.account.savings': 'Poupança',
     'finance.account.credit': 'Cartão de crédito',
@@ -696,6 +716,8 @@ const dicts: Record<Lang, Record<string, string>> = {
     // Projects module (v0.4.0)
     'projects.subtitle': 'Acompanhe clientes, entregas e trabalho do time.',
     'projects.board': 'Board',
+    'projects.list': 'Lista',
+    'projects.title': 'Projetos',
     'projects.timeline': 'Linha do tempo',
     'projects.due_tasks': 'Tarefas pendentes',
     'projects.column.todo': 'A Fazer',
