@@ -7,6 +7,7 @@ import type { Project, ProjectMember, ProjectTag, ProjectSubitem, ProjectStatus 
 import { ProjectColumn } from '../components/projects/ProjectColumn'
 import { NewProjectDialog } from '../components/projects/NewProjectDialog'
 import { ProjectSidePanel } from '../components/projects/ProjectSidePanel'
+import { ProjectListView } from '../components/projects/ProjectListView'
 import { COLUMN_DEFS } from '../components/projects/projectConstants'
 
 type ViewTab = 'board' | 'list' | 'timeline' | 'due_tasks'
@@ -235,9 +236,27 @@ export function Projects() {
         </div>
       )}
 
-      {viewTab !== 'board' && (
+      {viewTab === 'list' && activeProfile && (
+        <ProjectListView
+          projects={projects}
+          membersByProject={membersByProject}
+          tagsByProject={tagsByProject}
+          subitemsByProject={subitemsByProject}
+          selectedId={selectedId}
+          profileId={activeProfile.id}
+          onOpenProject={handleOpenProject}
+          onAddProject={() => handleAddProject('todo')}
+          onDeleteProject={async (id) => {
+            if (!confirm(t('projects.confirm_delete'))) return
+            await window.api.projects.archive(id, true)
+            if (selectedId === id) handleClosePanel()
+            await load()
+          }}
+        />
+      )}
+
+      {viewTab !== 'board' && viewTab !== 'list' && (
         <div className="flex-1 flex items-center justify-center text-text-muted text-sm p-6">
-          {viewTab === 'list' && 'List view — coming soon'}
           {viewTab === 'timeline' && 'Timeline view — coming soon'}
           {viewTab === 'due_tasks' && 'Due tasks — coming soon'}
         </div>
