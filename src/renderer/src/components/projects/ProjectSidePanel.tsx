@@ -202,15 +202,16 @@ export function ProjectSidePanel({
   const progress = calcProgressFromSubitems(subitems)
 
   return (
-    <>
-      {/* Overlay escura atrás */}
-      <div
-        className="fixed inset-0 z-40 bg-black/30"
-        onClick={onClose}
-      />
+      <>
+        {/* Overlay escura atrás (rgba 0.5 conforme spec do side panel Pro) */}
+        <div
+          className="fixed inset-0"
+          style={{ background: 'rgba(0, 0, 0, 0.5)', zIndex: 60 }}
+          onClick={onClose}
+        />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-[520px] bg-bg-card border-l border-border shadow-pop flex flex-col overflow-hidden">
+      <div className="fixed right-0 top-0 bottom-0 w-[660px] bg-bg-card border-l border-border shadow-pop flex flex-col overflow-hidden" style={{ zIndex: 70 }}>
         {/* Header */}
         <div className="shrink-0 px-5 py-4 border-b border-border flex items-start gap-3">
           <span className="text-2xl mt-0.5 shrink-0">{project.emoji ?? '📁'}</span>
@@ -234,13 +235,24 @@ export function ProjectSidePanel({
               autoFocus
             />
           ) : (
-            <h2
-              onClick={() => setEditingName(true)}
-              className="flex-1 text-xl font-semibold text-text cursor-text hover:bg-bg-hover rounded px-2 py-1 -mx-2 -my-1 transition-colors"
-            >
-              {project.name}
-            </h2>
-          )}
+                      <h2
+                        onClick={() => setEditingName(true)}
+                        className="flex-1 font-semibold cursor-text hover:bg-bg-hover rounded px-2 py-1 -mx-2 -my-1 transition-colors"
+                        style={{
+                          fontSize: 26,
+                          fontWeight: 700,
+                          letterSpacing: '-0.02em',
+                          color: '#f4f4f6',
+                          // wavy underline vermelho conforme spec (notion-style accent)
+                          textDecoration: 'underline wavy #ef4444',
+                          textDecorationSkipInk: 'none',
+                          textUnderlineOffset: 6,
+                          textDecorationThickness: '1.5px'
+                        }}
+                      >
+                        {project.name}
+                      </h2>
+                    )}
           <button
             onClick={onClose}
             className="p-1.5 rounded hover:bg-bg-hover text-text-muted mt-0.5"

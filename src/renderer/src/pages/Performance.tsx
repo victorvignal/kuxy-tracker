@@ -9,6 +9,8 @@ import {
   ResponsiveContainer,
   CartesianGrid
 } from 'recharts'
+import { useProfileStore } from '../store/useProfile'
+import { Goals } from './Goals'
 
 /**
  * Performance — gráficos de progresso ao longo do tempo.
@@ -34,6 +36,13 @@ const GOALS = [
 ]
 
 export function Performance() {
+  const active = useProfileStore((s) => s.getActive())
+
+  // Profissional = Goals (metas + anéis KPI + marcos)
+  if (active?.type === 'professional') {
+    return <Goals />
+  }
+
   const [period, setPeriod] = useState<0 | 1 | 2>(1)
 
   const avgSavings = Math.round(GROWTH_DATA.reduce((a, d) => a + d.savings, 0) / GROWTH_DATA.length)

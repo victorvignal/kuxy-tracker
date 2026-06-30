@@ -11,6 +11,8 @@ import {
   Bar,
   CartesianGrid
 } from 'recharts'
+import { useProfileStore } from '../store/useProfile'
+import { Receipts } from './Receipts'
 
 /**
  * Reports — agregação mensal/semanal de receitas e despesas.
@@ -37,6 +39,13 @@ const BAR_DATA = [
 ]
 
 export function Reports() {
+  const active = useProfileStore((s) => s.getActive())
+
+  // Profissional = Receipts (gerador de invoice)
+  if (active?.type === 'professional') {
+    return <Receipts />
+  }
+
   const [period, setPeriod] = useState<0 | 1 | 2>(1) // 0=week, 1=month, 2=year
 
   const totalIncome = LINE_DATA.reduce((a, d) => a + d.income, 0)

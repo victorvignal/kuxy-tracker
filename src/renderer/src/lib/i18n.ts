@@ -210,6 +210,7 @@ const dicts: Record<Lang, Record<string, string>> = {
     'sidebar.legacy': 'Legacy',
     'sidebar.trial_body': 'You have {days} days left. Upgrade to continue',
     'sidebar.trial_cta': 'Select plan',
+    'sidebar.trial_title': 'Free Trial Version',
     'profile.default_name': 'Personal',
 
     // New nav items (Pessoal Dashboard template)
@@ -567,6 +568,7 @@ const dicts: Record<Lang, Record<string, string>> = {
     'sidebar.legacy': 'Legado',
     'sidebar.trial_body': 'Você tem {days} dias restantes. Faça upgrade pra continuar',
     'sidebar.trial_cta': 'Selecionar plano',
+    'sidebar.trial_title': 'Versão de teste grátis',
     'profile.default_name': 'Pessoal',
 
     // Novos itens de nav (template Pessoal Dashboard)
