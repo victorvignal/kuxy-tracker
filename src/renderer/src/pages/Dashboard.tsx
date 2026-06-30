@@ -1,31 +1,45 @@
 import { useState, useEffect, useRef } from 'react'
+import { useT } from '../lib/i18n'
+import { useProfileStore } from '../store/useProfile'
+import { useFinanceData } from '../hooks/useFinanceData'
 import {
+  Wallet,
+  PiggyBank,
+  TrendingUp,
+  Receipt,
+  LayoutGrid,
+  MoreHorizontal,
   ChevronLeft,
   ChevronRight,
   Upload,
   ChevronDown,
-  Wallet as WalletIcon,
   CreditCard,
+  Wallet as WalletIcon,
   PiggyBank as PiggyIcon,
   FolderKanban,
-  LayoutGrid
+  type LucideIcon
 } from 'lucide-react'
-import { useProfileStore } from '../store/useProfile'
-import { useFinanceData } from '../hooks/useFinanceData'
 import { AccountDialog } from '../components/finance/AccountDialog'
 import { SubscriptionDialog } from '../components/finance/SubscriptionDialog'
 import { BudgetDialog } from '../components/finance/BudgetDialog'
 import { NewProjectDialog } from '../components/projects/NewProjectDialog'
-import { Card } from '../components/ui/Card'
-import { Btn } from '../components/ui/Btn'
-import { Pill } from '../components/ui/Pill'
-import { SegmentedControl } from '../components/ui/SegmentedControl'
-import { Donut } from '../components/ui/Donut'
-import { RevenueChart } from '../components/ui/RevenueChart'
-import { Avatar } from '../components/ui/Avatar'
-import { DashboardPro } from './DashboardPro'
+// (não usa fmtBRL — valores são fixos pra comparar com template)
 
-// Valores fixos pra comparar com template (não puxam do Finance ainda).
+/**
+ * Dashboard Pessoal — réplica 1:1 do template
+ * (C:\Users\vigna\Downloads\design\Tempo Dashboard.dc.html).
+ *
+ * Os valores mostrados são FIXOS/aleatórios (não puxam do Finance module)
+ * pra permitir comparação direta com o template durante a iteração de design.
+ * Quando o design estiver aprovado, reconecto com useFinanceData.
+ *
+ * Estrutura (na ordem do template):
+ *  - Filter row (30 Days / 3 Months / 1 Year tabs + Export + New ▾)
+ *  - Stat cards 4x1 (Monthly Balance / Total Savings / Monthly Income / Monthly Expenses)
+ *  - Middle row: Revenue Flow (flex:1) + Spending Breakdown (width: 310px)
+ *  - Contacts table
+ */
+
 const TEST_VALUES = {
   monthlyBalance: { value: 'R$ 9.999', delta: '+12% (R$ 1.080)' },
   totalSavings: { value: 'R$ 14.999', delta: '+8% (R$ 1.110)' },
@@ -38,33 +52,93 @@ const TEST_VALUES = {
   insightText: 'You saved 32% of your income this month, exceeding the 25% target.',
   donutTotal: '7.299',
   donutItems: [
-    { value: 3200, label: 'Housing', color: '#8b5cf6', display: '3.200' },
-    { value: 1850, label: 'Food', color: '#a78bfa', display: '1.850' },
-    { value: 1250, label: 'Transport', color: '#6d4ee0', display: '1.250' },
-    { value: 999, label: 'Health', color: '#4f4193', display: '999' }
+    { label: 'Housing', value: '3.200', color: '#8b5cf6' },
+    { label: 'Food', value: '1.850', color: '#6d4ee0' },
+    { label: 'Transport', value: '1.250', color: '#a78bfa' },
+    { label: 'Health', value: '999', color: '#4f4193' }
   ]
 }
 
-const PERIOD_OPTIONS = [
-  { value: '30', label: '30 Days' },
-  { value: '3m', label: '3 Months' },
-  { value: '1y', label: '1 Year' }
-] as const
-type PeriodValue = (typeof PERIOD_OPTIONS)[number]['value']
+// ---- Donut chart: 4 segmentos hardcoded do template (valores reais acima) ----
+function Donut({ segments }: { segments: typeof TEST_VALUES.donutItems }) {
+  const r = 46
+  const circ = +(2 * Math.PI * r).toFixed(2) // ~289.03
+  const total = segments.reduce((acc, s) => acc + parseFloat(s.value.replace(/\./g, '')), 0)
+  let acc = 0
+  return (
+    <svg viewBox="0 0 120 120" style={{ width: 110, height: 110, transform: 'rotate(-90deg)' }}>
+      {segments.map((s, i) => {
+        const val = parseFloat(s.value.replace(/\./g, ''))
+        const frac = val / total
+        const dash = frac * circ
+        const seg = {
+          dasharray: `${dash.toFixed(2)} ${(circ - dash).toFixed(2)}`,
+          offset: (-acc * circ).toFixed(2)
+        }
+        acc += frac
+        void i
+        return (
+          <circle
+            key={i}
+            cx="60"
+            cy="60"
+            r={r}
+            fill="none"
+            stroke={s.color}
+            strokeWidth="14"
+            strokeDasharray={seg.dasharray}
+            strokeDashoffset={seg.offset}
+          />
+        )
+      })}
+    </svg>
+  )
+}
 
-const CONTACT_ROWS = [
-  { id: '001', name: 'Maria Silva', avColor: '#f472b6', email: 'maria@gmail.com', status: 'Active', tone: 'success' as const, date: '2025-06-01', source: 'Family' },
-  { id: '002', name: 'João Santos', avColor: '#60a5fa', email: 'joao.s@gmail.com', status: 'Active', tone: 'success' as const, date: '2025-05-22', source: 'Friend' },
-  { id: '003', name: 'Ana Costa', avColor: '#a78bfa', email: 'ana.costa@outlook.com', status: 'Pending', tone: 'warning' as const, date: '2025-04-15', source: 'Work' },
-  { id: '004', name: 'Pedro Lima', avColor: '#34d399', email: 'pedro.lima@gmail.com', status: 'Active', tone: 'success' as const, date: '2025-04-02', source: 'Family' },
-  { id: '005', name: 'Carla Souza', avColor: '#fbbf24', email: 'carla.souza@hotmail.com', status: 'Inactive', tone: 'muted' as const, date: '2025-03-20', source: 'Work' },
-  { id: '006', name: 'Lucas Rocha', avColor: '#22d3ee', email: 'lucas.r@gmail.com', status: 'Active', tone: 'success' as const, date: '2025-03-11', source: 'Friend' }
-]
+// ---- Stat card (template: 22px valor / 13px label) ----
+function StatCard({
+  Icon,
+  label,
+  value,
+  delta,
+  positive
+}: {
+  Icon: LucideIcon
+  label: string
+  value: string
+  delta: string
+  positive: boolean
+}) {
+  return (
+    <div
+      className="flex-1 rounded-[14px] p-[18px]"
+      style={{ background: '#141416', border: '1px solid #1f1f22' }}
+    >
+      <div className="mb-[14px]">
+        <Icon size={18} color="#86868d" strokeWidth={1.75} />
+      </div>
+      <div className="text-[13px] mb-[6px]" style={{ color: '#86868d' }}>
+        {label}
+      </div>
+      <div
+        className="text-[22px] font-bold mb-[9px]"
+        style={{ color: '#f4f4f6' }}
+      >
+        {value}
+      </div>
+      <div className="text-[12px]" style={{ color: '#7a7a80' }}>
+        <span style={{ color: positive ? '#4ade80' : '#f87171', fontWeight: 600 }}>{delta}</span>
+        {' · Last 30 Days'}
+      </div>
+    </div>
+  )
+}
 
 export function Dashboard() {
+  const t = useT()
   const active = useProfileStore((s) => s.getActive())
   const { accounts, categories } = useFinanceData()
-  const [period, setPeriod] = useState<PeriodValue>('30')
+  const [period, setPeriod] = useState<0 | 1 | 2>(0)
 
   // Dropdown state do "+ New"
   const [newMenuOpen, setNewMenuOpen] = useState(false)
@@ -95,25 +169,53 @@ export function Dashboard() {
     else if (action === 'project') setShowProject(true)
   }
 
-  // Perfil Profissional usa o dashboard rico do design Pro.
+  // Se for perfil Profissional, mostra placeholder simples
   if (active?.type === 'professional') {
-    return <DashboardPro />
+    return (
+      <div className="flex-1 flex items-center justify-center p-12">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-bold mb-2">{t('nav.dashboard')}</h1>
+          <p className="text-sm text-text-muted">Dashboard for Professional profile is coming soon.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="flex-1 overflow-y-auto" style={{ background: 'var(--color-bg)' }}>
+    <div
+      className="flex-1 overflow-y-auto"
+      style={{ background: 'var(--color-bg)' }}
+    >
       <div className="px-6 pt-[18px] pb-6">
         {/* Filter row */}
         <div className="flex items-center justify-between mb-[18px]">
-          <SegmentedControl<PeriodValue>
-            options={PERIOD_OPTIONS as any}
-            value={period}
-            onChange={setPeriod}
-          />
+          <div
+            className="flex rounded-[9px] p-[3px]"
+            style={{ background: '#121214', border: '1px solid #202023' }}
+          >
+            {(['30 Days', '3 Months', '1 Year'] as const).map((label, i) => (
+              <button
+                key={label}
+                onClick={() => setPeriod(i as 0 | 1 | 2)}
+                className="px-4 py-[7px] rounded-md text-[13px] font-medium transition-colors"
+                style={{
+                  background: period === i ? '#161619' : 'transparent',
+                  color: period === i ? '#f4f4f6' : '#86868d',
+                  fontWeight: period === i ? 600 : 500
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-[10px]">
-            <Btn variant="secondary" leftIcon={<Upload size={16} strokeWidth={1.75} />}>
+            <button
+              className="flex items-center gap-[7px] h-[38px] px-[14px] rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
+              style={{ background: '#161619', border: '1px solid #232327', color: '#e8e8ea' }}
+            >
+              <Upload size={16} strokeWidth={1.75} />
               Export
-            </Btn>
+            </button>
             <div className="relative" ref={newMenuRef}>
               <div
                 className="flex items-center h-[38px] rounded-[9px] overflow-hidden"
@@ -183,24 +285,28 @@ export function Dashboard() {
         {/* Stat cards 4x1 */}
         <div className="flex gap-[14px] mb-4">
           <StatCard
+            Icon={Wallet}
             label="Monthly Balance"
             value={TEST_VALUES.monthlyBalance.value}
             delta={TEST_VALUES.monthlyBalance.delta}
             positive
           />
           <StatCard
+            Icon={PiggyBank}
             label="Total Savings"
             value={TEST_VALUES.totalSavings.value}
             delta={TEST_VALUES.totalSavings.delta}
             positive
           />
           <StatCard
+            Icon={TrendingUp}
             label="Monthly Income"
             value={TEST_VALUES.monthlyIncome.value}
             delta={TEST_VALUES.monthlyIncome.delta}
             positive
           />
           <StatCard
+            Icon={Receipt}
             label="Monthly Expenses"
             value={TEST_VALUES.monthlyExpenses.value}
             delta={TEST_VALUES.monthlyExpenses.delta}
@@ -210,20 +316,27 @@ export function Dashboard() {
 
         {/* Middle row: Revenue Flow + Spending Breakdown */}
         <div className="flex gap-4 mb-4">
-          {/* Revenue Flow */}
-          <Card className="flex-1">
+          {/* Revenue Flow — flex:1 */}
+          <div
+            className="flex-1 rounded-[14px] p-[18px]"
+            style={{ background: '#141416', border: '1px solid #1f1f22' }}
+          >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <LayoutGrid size={18} color="#4ade80" strokeWidth={1.75} />
+                <TrendingUp size={18} color="#4ade80" strokeWidth={1.75} />
                 <span className="text-[15px] font-semibold" style={{ color: '#f4f4f6' }}>
                   Revenue Flow
                 </span>
               </div>
+              <MoreHorizontal size={18} color="#6a6a70" />
             </div>
             <div className="flex gap-[18px]">
-              {/* Hero number + Insight sub-card */}
+              {/* Sub-card Revenue text + Insight */}
               <div className="w-[188px] shrink-0">
-                <div className="text-[27px] font-bold tracking-[-.01em]" style={{ color: '#f4f4f6' }}>
+                <div
+                  className="text-[27px] font-bold tracking-[-.01em]"
+                  style={{ color: '#f4f4f6' }}
+                >
                   {TEST_VALUES.revenueTotal}
                 </div>
                 <div className="text-[13px] my-[5px]" style={{ color: '#86868d' }}>
@@ -236,43 +349,88 @@ export function Dashboard() {
                   {' · Last 30 Days'}
                 </div>
                 {/* Insight sub-card */}
-                <Card variant="inset">
+                <div
+                  className="rounded-[12px] p-[14px]"
+                  style={{ background: '#1b1b1e', border: '1px solid #26262a' }}
+                >
                   <div className="text-[13px] font-semibold mb-[6px]" style={{ color: '#f0f0f2' }}>
                     {TEST_VALUES.insightTitle}
                   </div>
-                  <div className="text-[11.5px] leading-[1.5] mb-4" style={{ color: '#86868d' }}>
+                  <div
+                    className="text-[11.5px] leading-[1.5] mb-4"
+                    style={{ color: '#86868d' }}
+                  >
                     {TEST_VALUES.insightText}
                   </div>
                   <div className="flex items-center justify-between">
+                    {/* Dots slider */}
                     <div className="flex items-center gap-[5px]">
                       <span className="w-4 h-[3px] rounded-[2px]" style={{ background: '#7a7a80' }} />
                       <span className="w-2 h-[3px] rounded-[2px]" style={{ background: '#3a3a3e' }} />
                       <span className="w-2 h-[3px] rounded-[2px]" style={{ background: '#3a3a3e' }} />
                     </div>
+                    {/* Prev/Next buttons */}
                     <div className="flex gap-[6px]">
-                      <span className="w-6 h-6 rounded-full border flex items-center justify-center" style={{ borderColor: '#2e2e32', color: '#9a9aa0' }}>
+                      <span
+                        className="w-6 h-6 rounded-full border flex items-center justify-center"
+                        style={{ borderColor: '#2e2e32', color: '#9a9aa0' }}
+                      >
                         <ChevronLeft size={14} />
                       </span>
-                      <span className="w-6 h-6 rounded-full border flex items-center justify-center" style={{ borderColor: '#2e2e32', color: '#9a9aa0' }}>
+                      <span
+                        className="w-6 h-6 rounded-full border flex items-center justify-center"
+                        style={{ borderColor: '#2e2e32', color: '#9a9aa0' }}
+                      >
                         <ChevronRight size={14} />
                       </span>
                     </div>
                   </div>
-                </Card>
+                </div>
               </div>
 
-              {/* Revenue chart */}
+              {/* Chart SVG (template: viewBox 460x200) */}
               <div className="flex-1 min-w-0">
-                <RevenueChart highlightIndex={10} />
+                <svg viewBox="0 0 460 200" style={{ width: '100%', height: 200, display: 'block' }} preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="rf" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.28" />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {/* Grid lines horizontais */}
+                  <g stroke="#1c1c1f" strokeWidth="1">
+                    <line x1="40" y1="24" x2="452" y2="24" />
+                    <line x1="40" y1="62" x2="452" y2="62" />
+                    <line x1="40" y1="100" x2="452" y2="100" />
+                    <line x1="40" y1="138" x2="452" y2="138" />
+                    <line x1="40" y1="172" x2="452" y2="172" />
+                  </g>
+                  {/* Area fill */}
+                  <path
+                    d="M45,150 L75,140 L100,148 L125,120 L150,130 L175,100 L200,112 L225,95 L255,105 L280,78 L300,92 L320,70 L345,82 L365,55 L390,68 L415,40 L445,30 L445,172 L45,172 Z"
+                    fill="url(#rf)"
+                  />
+                  {/* Line */}
+                  <path
+                    d="M45,150 L75,140 L100,148 L125,120 L150,130 L175,100 L200,112 L225,95 L255,105 L280,78 L300,92 L320,70 L345,82 L365,55 L390,68 L415,40 L445,30"
+                    fill="none"
+                    stroke="#8b5cf6"
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                  {/* Dot indicator + dashed vertical line */}
+                  <line x1="300" y1="78" x2="300" y2="172" stroke="#6b6b72" strokeWidth="1" strokeDasharray="3 3" />
+                  <circle cx="300" cy="92" r="4.5" fill="#0a0a0b" stroke="#8b5cf6" strokeWidth="2.5" />
+                </svg>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Spending Breakdown */}
-          <Card
-            className="shrink-0 flex flex-col"
-            style={{ width: 310 }}
-            padding="18px 20px"
+          {/* Spending Breakdown — width 310px */}
+          <div
+            className="shrink-0 rounded-[14px] p-[18px] flex flex-col"
+            style={{ width: 310, background: '#141416', border: '1px solid #1f1f22' }}
           >
             <div className="flex items-center justify-between mb-[18px]">
               <div className="flex items-center gap-2">
@@ -285,9 +443,7 @@ export function Dashboard() {
 
             <div className="flex items-center gap-5 mb-5">
               <div className="relative w-[110px] h-[110px] shrink-0">
-                <Donut
-                  segments={TEST_VALUES.donutItems.map((d) => ({ value: d.value, color: d.color, label: d.label }))}
-                />
+                <Donut segments={TEST_VALUES.donutItems} />
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <div className="text-[21px] font-bold leading-none" style={{ color: '#f4f4f6' }}>
                     {TEST_VALUES.donutTotal}
@@ -305,106 +461,139 @@ export function Dashboard() {
                       {d.label}
                     </span>
                     <span className="text-[12px] font-bold" style={{ color: '#f4f4f6' }}>
-                      {d.display}
+                      {d.value}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <Btn variant="secondary" rightIcon={<ChevronRight size={16} strokeWidth={1.75} />} className="mt-auto h-10">
+            <button
+              className="mt-auto flex items-center justify-center gap-2 h-10 rounded-[10px] text-[13px] font-medium transition-colors hover:opacity-90"
+              style={{ background: '#161619', border: '1px solid #232327', color: '#e8e8ea' }}
+            >
               More details
-            </Btn>
-          </Card>
+              <ChevronRight size={16} strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
 
-        {/* Contacts table */}
+        {/* Contacts table — placeholder visual (Contacts.tsx separado) */}
         <ContactsTable />
       </div>
 
       {/* Dialogs do "+ New" dropdown */}
-      {showAccount && active && <AccountDialog onClose={() => setShowAccount(false)} onSaved={() => setShowAccount(false)} />}
-      {showSubscription && active && (
-        <SubscriptionDialog onClose={() => setShowSubscription(false)} onSaved={() => setShowSubscription(false)} accounts={accounts as any} categories={categories as any} />
+      {showAccount && active && (
+        <AccountDialog
+          onClose={() => setShowAccount(false)}
+          onSaved={() => setShowAccount(false)}
+        />
       )}
-      {showBudget && active && <BudgetDialog onClose={() => setShowBudget(false)} onSaved={() => setShowBudget(false)} categories={categories as any} />}
-      {showProject && active && <NewProjectDialog onClose={() => setShowProject(false)} onCreated={() => setShowProject(false)} profileId={active.id} initialStatus="todo" />}
+      {showSubscription && active && (
+        <SubscriptionDialog
+          onClose={() => setShowSubscription(false)}
+          onSaved={() => setShowSubscription(false)}
+          accounts={accounts as any}
+          categories={categories as any}
+        />
+      )}
+      {showBudget && active && (
+        <BudgetDialog
+          onClose={() => setShowBudget(false)}
+          onSaved={() => setShowBudget(false)}
+          categories={categories as any}
+        />
+      )}
+      {showProject && active && (
+        <NewProjectDialog
+          onClose={() => setShowProject(false)}
+          onCreated={() => setShowProject(false)}
+          profileId={active.id}
+          initialStatus="todo"
+        />
+      )}
     </div>
   )
 }
 
-function StatCard({
-  label,
-  value,
-  delta,
-  positive
-}: {
-  label: string
-  value: string
-  delta: string
-  positive: boolean
-}) {
-  return (
-    <Card className="flex-1">
-      <div className="text-[13px] mb-[6px]" style={{ color: '#86868d' }}>
-        {label}
-      </div>
-      <div className="text-[22px] font-bold mb-[9px]" style={{ color: '#f4f4f6' }}>
-        {value}
-      </div>
-      <div className="text-[12px]" style={{ color: '#7a7a80' }}>
-        <span style={{ color: positive ? '#4ade80' : '#f87171', fontWeight: 600 }}>{delta}</span>
-        {' · Last 30 Days'}
-      </div>
-    </Card>
-  )
-}
-
 function ContactsTable() {
+  const rows = [
+    { id: '001', name: 'Maria Silva', av: '#f472b6', email: 'maria@gmail.com', status: 'Active', stBg: 'rgba(74,222,128,0.12)', stFg: '#4ade80', date: '2025-06-01', source: 'Family', srcColor: '#a78bfa' },
+    { id: '002', name: 'João Santos', av: '#60a5fa', email: 'joao.s@gmail.com', status: 'Active', stBg: 'rgba(74,222,128,0.12)', stFg: '#4ade80', date: '2025-05-22', source: 'Friend', srcColor: '#a78bfa' },
+    { id: '003', name: 'Ana Costa', av: '#a78bfa', email: 'ana.costa@outlook.com', status: 'Pending', stBg: 'rgba(250,204,21,0.12)', stFg: '#facc15', date: '2025-04-15', source: 'Work', srcColor: '#a78bfa' },
+    { id: '004', name: 'Pedro Lima', av: '#34d399', email: 'pedro.lima@gmail.com', status: 'Active', stBg: 'rgba(74,222,128,0.12)', stFg: '#4ade80', date: '2025-04-02', source: 'Family', srcColor: '#a78bfa' },
+    { id: '005', name: 'Carla Souza', av: '#fbbf24', email: 'carla.souza@hotmail.com', status: 'Inactive', stBg: 'rgba(122,122,128,0.12)', stFg: '#7a7a80', date: '2025-03-20', source: 'Work', srcColor: '#a78bfa' },
+    { id: '006', name: 'Lucas Rocha', av: '#22d3ee', email: 'lucas.r@gmail.com', status: 'Active', stBg: 'rgba(74,222,128,0.12)', stFg: '#4ade80', date: '2025-03-11', source: 'Friend', srcColor: '#a78bfa' }
+  ]
+
   return (
-    <Card>
+    <div
+      className="rounded-[14px] p-[18px]"
+      style={{ background: '#141416', border: '1px solid #1f1f22' }}
+    >
       <div className="text-[15px] font-semibold mb-[14px]" style={{ color: '#f4f4f6' }}>
-        {CONTACT_ROWS.length} Personal Contacts
+        6 Personal Contacts
       </div>
+
+      {/* Header row */}
       <div
         className="flex items-center px-[6px] pb-[11px]"
-        style={{ borderBottom: '1px solid #1d1d20', color: '#7a7a80', fontSize: 12, fontWeight: 500 }}
+        style={{ borderBottom: '1px solid #1d1d20', color: '#7a7a80', fontSize: '12px', fontWeight: 500 }}
       >
-        <div style={{ width: 30, flexShrink: 0 }}>
-          <span className="inline-block w-[15px] h-[15px] rounded-[4px]" style={{ border: '1.5px solid #3a3a3e' }} />
+        <div className="w-[30px] shrink-0">
+          <span
+            className="inline-block w-[15px] h-[15px] rounded-[4px]"
+            style={{ border: '1.5px solid #3a3a3e' }}
+          />
         </div>
-        <div style={{ width: 80, flexShrink: 0 }}>ID</div>
-        <div style={{ flex: 1 }}>Name</div>
+        <div className="w-[80px] shrink-0">ID</div>
+        <div className="flex-1">Name</div>
         <div style={{ flex: 1.3 }}>Email</div>
-        <div style={{ width: 100, flexShrink: 0 }}>Status</div>
-        <div style={{ width: 110, flexShrink: 0 }}>Date</div>
-        <div style={{ width: 100, flexShrink: 0 }}>Source</div>
+        <div className="w-[100px] shrink-0">Status</div>
+        <div className="w-[110px] shrink-0">Date</div>
+        <div className="w-[100px] shrink-0">Source</div>
       </div>
 
-      {CONTACT_ROWS.map((r) => (
+      {/* Rows */}
+      {rows.map((r) => (
         <div
           key={r.id}
           className="flex items-center px-[6px] py-[11px] hover:opacity-90 transition-colors"
-          style={{ borderBottom: '1px solid #161618', fontSize: 13, color: '#e8e8ea' }}
+          style={{ borderBottom: '1px solid #161618', fontSize: '13px', color: '#e8e8ea' }}
         >
-          <div style={{ width: 30, flexShrink: 0 }}>
-            <span className="inline-block w-[15px] h-[15px] rounded-[4px]" style={{ border: '1.5px solid #3a3a3e' }} />
+          <div className="w-[30px] shrink-0">
+            <span
+              className="inline-block w-[15px] h-[15px] rounded-[4px]"
+              style={{ border: '1.5px solid #3a3a3e' }}
+            />
           </div>
-          <div style={{ width: 80, flexShrink: 0, color: '#9a9aa0' }}>{r.id}</div>
-          <div className="flex items-center gap-[9px]" style={{ flex: 1 }}>
-            <Avatar gradient={r.avColor} initial={r.name.charAt(0)} size="sm" />
+          <div className="w-[80px] shrink-0" style={{ color: '#9a9aa0' }}>
+            {r.id}
+          </div>
+          <div className="flex-1 flex items-center gap-[9px]">
+            <span
+              className="w-6 h-6 rounded-full shrink-0"
+              style={{ background: r.av }}
+            />
             {r.name}
           </div>
           <div style={{ flex: 1.3, color: '#9a9aa0' }}>{r.email}</div>
-          <div style={{ width: 100, flexShrink: 0 }}>
-            <Pill tone={r.tone} dot={false}>
+          <div className="w-[100px] shrink-0">
+            <span
+              className="inline-block py-[3px] px-[10px] rounded-[6px]"
+              style={{ fontSize: '11.5px', fontWeight: 500, background: r.stBg, color: r.stFg }}
+            >
               {r.status}
-            </Pill>
+            </span>
           </div>
-          <div style={{ width: 110, flexShrink: 0, color: '#b8b8be' }}>{r.date}</div>
-          <div style={{ width: 100, flexShrink: 0, fontSize: 12.5, fontWeight: 500, color: '#a78bfa' }}>{r.source}</div>
+          <div className="w-[110px] shrink-0" style={{ color: '#b8b8be' }}>
+            {r.date}
+          </div>
+          <div className="w-[100px] shrink-0" style={{ fontSize: '12.5px', fontWeight: 500, color: r.srcColor }}>
+            {r.source}
+          </div>
         </div>
       ))}
-    </Card>
+    </div>
   )
 }

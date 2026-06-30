@@ -4,17 +4,6 @@
   "description": "Desktop habit tracker with multi-profile workspaces",
   "main": "./out/main/index.js",
   "author": "Victor Vignal",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/victorvignal/kuxy-tracker.git"
-  },
-  "build": {
-    "publish": {
-      "provider": "github",
-      "owner": "victorvignal",
-      "repo": "kuxy-tracker"
-    }
-  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",

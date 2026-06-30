@@ -262,9 +262,9 @@ export const DARK: Theme = {
     topbarHeight: '38px'
   },
   font: {
-      sans: '"Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
-      mono: '"JetBrains Mono", ui-monospace, monospace'
-    },
+    sans: '"Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif',
+    mono: '"JetBrains Mono", ui-monospace, monospace'
+  },
   shadow: {
     card: '0 1px 0 0 rgba(255, 255, 255, 0.02) inset, 0 0 0 1px rgba(255, 255, 255, 0.05)',
     pop: '0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06)'

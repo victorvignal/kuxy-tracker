@@ -7,7 +7,6 @@ import type { LucideIcon } from 'lucide-react'
 import { useProfileStore } from '../store/useProfile'
 import { useFinanceData } from '../hooks/useFinanceData'
 import { SubscriptionDialog } from '../components/finance/SubscriptionDialog'
-import { Outreach } from './Outreach'
 import type { Subscription, SubscriptionInterval, Account, Category } from '../types'
 
 /**
@@ -46,12 +45,6 @@ function intervalLabel(i: SubscriptionInterval): string {
 
 export function Subscriptions() {
   const active = useProfileStore((s) => s.getActive())
-
-  // Profissional = Outreach (prospecção de criadores)
-  if (active?.type === 'professional') {
-    return <Outreach />
-  }
-
   const { accounts, categories } = useFinanceData()
 
   const [subs, setSubs] = useState<Subscription[]>([])

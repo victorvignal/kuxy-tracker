@@ -10,10 +10,9 @@ import {
   Code,
   Heart,
   Star,
-  X,
-  Zap,
-  ChevronsUpDown
+  X
 } from 'lucide-react'
+import { BrandLogo, ChevronDoubleDown } from '../template-icons/TemplateIcon'
 import { useProfileStore } from '../../store/useProfile'
 import { useT } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
@@ -177,31 +176,15 @@ export function ProfileSwitcher() {
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-[11px] w-full bg-transparent hover:bg-bg-hover rounded-md py-1 px-1.5 transition-colors text-left"
-            >
-          <span
-            className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center shrink-0"
-                style={{
-              background:
-                active?.type === 'professional'
-                  ? 'linear-gradient(135deg, #5b6b8c, #2c3447)'
-                  : 'linear-gradient(150deg, #3a3a40, #161618)',
-              boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.18)'
-                }}
-          >
-            {active?.type === 'professional' ? (
-              <Briefcase size={16} color="#fff" strokeWidth={1.75} />
-            ) : (
-              <Zap size={16} color="#fff" fill="#fff" strokeWidth={0} />
-            )}
-          </span>
-          <span
-            className="flex-1 truncate"
-            style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em', color: '#ffffff' }}
-          >
-                {active?.name || t('profile.select')}
-          </span>
-              <ChevronsUpDown size={16} color="#6a6a70" strokeWidth={1.75} />
-            </button>
+      >
+        <span className="w-[34px] h-[34px] rounded-lg bg-black border border-border-strong flex items-center justify-center shrink-0">
+          <BrandLogo size={17} />
+        </span>
+        <span className="text-tmpl-title-md flex-1 text-text truncate">
+          {active?.name || t('profile.select')}
+        </span>
+        <ChevronDoubleDown size={15} color="var(--color-text-subtle)" />
+      </button>
 
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1.5 z-50 card shadow-pop p-1.5">
@@ -261,7 +244,7 @@ export function ProfileSwitcher() {
               <button
                 onClick={() => setMode('create')}
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-text-muted hover:text-text hover:bg-bg-hover transition-colors"
-          >
+              >
                 <Plus className="w-4 h-4" />
                 {t('profile.new')}
               </button>
@@ -466,14 +449,14 @@ function ProfileForm({
                   checked
                     ? 'bg-accent-soft border-accent text-text'
                     : 'border-border text-text-subtle'
-            )}
-          >
+                )}
+              >
                 <div
                   className={cn(
                     'w-3 h-3 rounded border flex items-center justify-center shrink-0',
                     checked ? 'bg-accent border-accent' : 'border-border'
                   )}
-            >
+                >
                   {checked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
                 </div>
                 <span className="truncate">{t(labelKey)}</span>

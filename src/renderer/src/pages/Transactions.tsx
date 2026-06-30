@@ -13,7 +13,6 @@ import {
 import { useProfileStore } from '../store/useProfile'
 import { useFinanceData } from '../hooks/useFinanceData'
 import { TransactionDialog } from '../components/finance/TransactionDialog'
-import { Ritmo } from './Ritmo'
 import type { Account, Category, Transaction } from '../types'
 
 /**
@@ -31,12 +30,6 @@ type FilterType = 'all' | 'income' | 'expense'
 
 export function Transactions() {
   const active = useProfileStore((s) => s.getActive())
-
-  // Profissional = Ritmo (pomodoro + fila + heatmap + foco)
-  if (active?.type === 'professional') {
-    return <Ritmo />
-  }
-
   const { accounts, categories } = useFinanceData()
 
   const [txns, setTxns] = useState<Transaction[]>([])
