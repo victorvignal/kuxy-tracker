@@ -4,21 +4,12 @@ name: Release KUXY
 # no formato kuxy-vX.Y.Z. Sem prefixo conflitando com outros projetos
 # porque este repo é dedicado.
 # Ex: git tag kuxy-v0.3.0 && git push origin kuxy-v0.3.0
-#
-# Também pode ser re-rodado manualmente via workflow_dispatch pra republicar
-# uma tag existente (útil se a release foi deletada/criada fora do CI).
-# No re-run manual, o input `tag` define qual ref será usada.
 
 on:
   push:
     tags:
       - 'kuxy-v*'
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag ou ref pra republicar (default: master)'
-        required: false
-        default: 'master'
 
 permissions:
   contents: write
@@ -119,20 +110,15 @@ jobs:
   publish:
     name: Publish GitHub Release
     needs: build
-    # Publica em push de tag (automático) OU em re-run manual (workflow_dispatch).
-    # O input `tag` define qual ref usar no re-run; no push automático usa o ref do evento.
-    if: |
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
-      (github.event_name == 'workflow_dispatch')
+    # Só publica em push de tag. Funciona mesmo se alguns matrix items
+    # falharem (continue-on-error nos steps de build).
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         # gh release create roda git rev-parse internamente pra detectar
         # o commit/branch atual. Sem .git/ falha com 'not a git repository'.
-        # Em re-run, faz checkout do ref informado no input.
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -149,8 +135,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # Em re-run, github.ref_name pode não ser uma tag; nesse caso usa o input.
-          REF_NAME="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
           # Achata todos os artefatos em release-assets/. Cada artifact zip
           # do upload-artifact@v4 tem uma camada de diretório extra.
           mkdir -p release-assets
@@ -161,7 +145,7 @@ jobs:
           done
           echo "=== Assets encontrados ==="
           ls -la release-assets/
-          echo "=== Criando release ${REF_NAME} ==="
+          echo "=== Criando release ${{ github.ref_name }} ==="
           # Array preserva paths com espaço. -print0/-0z evita problema
           # com whitespace/newlines em nomes.
           declare -a ASSETS=()
@@ -170,7 +154,7 @@ jobs:
           done < <(find release-assets -type f -print0 | sort -z)
           echo "Total de assets: ${#ASSETS[@]}"
           printf '  - %s\n' "${ASSETS[@]}"
-          gh release create "${REF_NAME}" \
-            --title "${REF_NAME}" \
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
             --generate-notes \
             "${ASSETS[@]}"
