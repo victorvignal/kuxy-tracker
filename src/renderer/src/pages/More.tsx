@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   Keyboard,
   Globe,
@@ -27,19 +28,26 @@ type SettingItem = {
   iconBg: string
 }
 
-const ITEMS: SettingItem[] = [
-  { id: '1', label: 'Keyboard Shortcuts', sub: '⌘K to search, ⌘N new habit, ⌘S save', Icon: Keyboard, iconColor: '#a78bfa', iconBg: 'rgba(167,139,250,0.12)' },
-  { id: '2', label: 'Language', sub: 'English (US)', Icon: Globe, iconColor: '#22d3ee', iconBg: 'rgba(34,211,238,0.12)' },
-  { id: '3', label: 'Notifications', sub: 'Daily reminder at 9:00 AM', Icon: Bell, iconColor: '#fbbf24', iconBg: 'rgba(251,191,36,0.12)' },
-  { id: '4', label: 'Appearance', sub: 'Dark mode, font scale 100%', Icon: Palette, iconColor: '#f472b6', iconBg: 'rgba(244,114,182,0.12)' },
-  { id: '5', label: 'Data & Privacy', sub: 'Local storage, no cloud sync', Icon: Shield, iconColor: '#4ade80', iconBg: 'rgba(74,222,128,0.12)' },
-  { id: '6', label: 'Currency', sub: 'BRL (R$)', Icon: Database, iconColor: '#60a5fa', iconBg: 'rgba(96,165,250,0.12)' },
-  { id: '7', label: 'Desktop App', sub: 'v0.5.2 · Windows 10+', Icon: Monitor, iconColor: '#9a9aa0', iconBg: 'rgba(154,154,160,0.12)' },
-  { id: '8', label: 'Mobile App', sub: 'Not connected', Icon: Smartphone, iconColor: '#9a9aa0', iconBg: 'rgba(154,154,160,0.12)' },
-  { id: '9', label: 'Help & Support', sub: 'Docs, FAQ, contact', Icon: LifeBuoy, iconColor: '#a78bfa', iconBg: 'rgba(167,139,250,0.12)' }
-]
-
 export function More() {
+  const [appVersion, setAppVersion] = useState('—')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.api?.update?.getVersion) {
+      window.api.update.getVersion().then(setAppVersion).catch(() => {})
+    }
+  }, [])
+
+  const ITEMS: SettingItem[] = [
+    { id: '1', label: 'Keyboard Shortcuts', sub: '⌘K to search, ⌘N new habit, ⌘S save', Icon: Keyboard, iconColor: '#a78bfa', iconBg: 'rgba(167,139,250,0.12)' },
+    { id: '2', label: 'Language', sub: 'English (US)', Icon: Globe, iconColor: '#22d3ee', iconBg: 'rgba(34,211,238,0.12)' },
+    { id: '3', label: 'Notifications', sub: 'Daily reminder at 9:00 AM', Icon: Bell, iconColor: '#fbbf24', iconBg: 'rgba(251,191,36,0.12)' },
+    { id: '4', label: 'Appearance', sub: 'Dark mode, font scale 100%', Icon: Palette, iconColor: '#f472b6', iconBg: 'rgba(244,114,182,0.12)' },
+    { id: '5', label: 'Data & Privacy', sub: 'Local storage, no cloud sync', Icon: Shield, iconColor: '#4ade80', iconBg: 'rgba(74,222,128,0.12)' },
+    { id: '6', label: 'Currency', sub: 'BRL (R$)', Icon: Database, iconColor: '#60a5fa', iconBg: 'rgba(96,165,250,0.12)' },
+    { id: '7', label: 'Desktop App', sub: `v${appVersion} · Windows 10+`, Icon: Monitor, iconColor: '#9a9aa0', iconBg: 'rgba(154,154,160,0.12)' },
+    { id: '8', label: 'Mobile App', sub: 'Not connected', Icon: Smartphone, iconColor: '#9a9aa0', iconBg: 'rgba(154,154,160,0.12)' },
+    { id: '9', label: 'Help & Support', sub: 'Docs, FAQ, contact', Icon: LifeBuoy, iconColor: '#a78bfa', iconBg: 'rgba(167,139,250,0.12)' }
+  ]
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: 'var(--color-bg)' }}>
       <div className="px-6 pt-[18px] pb-6">
