@@ -8,7 +8,6 @@ import {
   FileText,
   Landmark,
   Globe,
-  MoreHorizontal,
   Settings as SettingsIcon,
   HelpCircle,
   MessageSquare,
@@ -48,7 +47,7 @@ const MAIN_MENU_PERSONAL: Item[] = [
   { path: '/reports', label: 'nav.reports', Icon: FileText },
   { path: '/transactions', label: 'nav.transactions', Icon: Landmark },
   { path: '/performance', label: 'nav.performance', Icon: Globe },
-  { path: '/more', label: 'nav.more', Icon: MoreHorizontal }
+  { path: '/settings', label: 'nav.settings', Icon: SettingsIcon }
 ]
 
 const MAIN_MENU_PROFESSIONAL: Item[] = [
@@ -62,7 +61,7 @@ const MAIN_MENU_PROFESSIONAL: Item[] = [
   { path: '/reports', label: 'Receipts', Icon: Receipt },
   { path: '/transactions', label: 'Ritmo', Icon: Timer },
   { path: '/performance', label: 'Goals', Icon: Target },
-  { path: '/more', label: 'nav.more', Icon: MoreHorizontal }
+  { path: '/settings', label: 'nav.settings', Icon: SettingsIcon }
 ]
 
 const GENERAL: Item[] = [
@@ -171,7 +170,7 @@ export function Sidebar() {
 
       {/* General heading (12px/500) */}
       <div className="flex items-center gap-[5px] px-2 mt-[18px] mb-2" style={{ color: '#6a6a70' }}>
-        <span className="text-[12px] font-medium">{t('sidebar.general')}</span>
+        <span className="text-[12px] font-medium">{t('nav.general')}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="6 9 12 15 18 9" />
         </svg>
