@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
-import { Dashboard } from './pages/Dashboard'
+import { ProfileDashboard } from './components/ProfileRouter'
 import { Habits } from './pages/Habits'
 import { Routines } from './pages/Routines'
 import { Calendar } from './pages/Calendar'
@@ -29,7 +29,7 @@ export default function App() {
     <ThemeProvider>
       <Routes>
         <Route element={<AppShell />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<ProfileDashboard />} />
 
           {/* Itens do template Pessoal Dashboard */}
           <Route path="/notifications" element={<Notifications />} />
