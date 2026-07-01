@@ -30,59 +30,38 @@ import { useProfileStore } from '../../store/useProfile'
 import { useT } from '../../lib/i18n'
 import { ProfileSwitcher } from './ProfileSwitcher'
 
-type IconVariant = { personal: LucideIcon; professional: LucideIcon }
-
 type Item = {
   path: string
-  /** i18n key, ou função que recebe o tipo de perfil e retorna a key. */
-  label: string | ((profileType: string | undefined) => string)
-  /** Ícone fixo (LucideIcon) ou variante por perfil. */
-  Icon: LucideIcon | IconVariant
+  /** i18n key. */
+  label: string
+  Icon: LucideIcon
 }
 
-/**
- * Main Menu com swap por perfil (decisão B).
- * Mesma rota, label e ícone diferentes conforme Pessoal/Profissional.
- */
-const MAIN_MENU: Item[] = [
+const MAIN_MENU_PERSONAL: Item[] = [
   { path: '/', label: 'nav.dashboard', Icon: LayoutDashboard },
-  {
-    path: '/projects',
-    label: (p) => (p === 'professional' ? 'nav.projects' : 'Tasks'),
-    Icon: { personal: CheckSquare, professional: FolderKanban }
-  },
+  { path: '/projects', label: 'Tasks', Icon: CheckSquare },
   { path: '/calendar', label: 'nav.calendar', Icon: Timer },
-  {
-    path: '/notifications',
-    label: (p) => (p === 'professional' ? 'Clients' : 'nav.notifications'),
-    Icon: { personal: Bell, professional: Contact }
-  },
+  { path: '/notifications', label: 'nav.notifications', Icon: Bell },
   { path: '/earnings', label: 'nav.earnings', Icon: CreditCard },
-  {
-    path: '/spending',
-    label: (p) => (p === 'professional' ? 'Leads Finder' : 'nav.spending'),
-    Icon: { personal: Wallet, professional: Search }
-  },
-  {
-    path: '/subscriptions',
-    label: (p) => (p === 'professional' ? 'Outreach' : 'nav.subscriptions'),
-    Icon: { personal: Users, professional: Send }
-  },
-  {
-    path: '/reports',
-    label: (p) => (p === 'professional' ? 'Receipts' : 'nav.reports'),
-    Icon: { personal: FileText, professional: Receipt }
-  },
-  {
-    path: '/transactions',
-    label: (p) => (p === 'professional' ? 'Ritmo' : 'nav.transactions'),
-    Icon: { personal: Landmark, professional: Timer }
-  },
-  {
-    path: '/performance',
-    label: (p) => (p === 'professional' ? 'Goals' : 'nav.performance'),
-    Icon: { personal: Globe, professional: Target }
-  },
+  { path: '/spending', label: 'nav.spending', Icon: Wallet },
+  { path: '/subscriptions', label: 'nav.subscriptions', Icon: Users },
+  { path: '/reports', label: 'nav.reports', Icon: FileText },
+  { path: '/transactions', label: 'nav.transactions', Icon: Landmark },
+  { path: '/performance', label: 'nav.performance', Icon: Globe },
+  { path: '/more', label: 'nav.more', Icon: MoreHorizontal }
+]
+
+const MAIN_MENU_PROFESSIONAL: Item[] = [
+  { path: '/', label: 'nav.dashboard', Icon: LayoutDashboard },
+  { path: '/projects', label: 'nav.projects', Icon: FolderKanban },
+  { path: '/calendar', label: 'nav.calendar', Icon: Timer },
+  { path: '/notifications', label: 'Clients', Icon: Contact },
+  { path: '/earnings', label: 'nav.earnings', Icon: CreditCard },
+  { path: '/spending', label: 'Leads Finder', Icon: Search },
+  { path: '/subscriptions', label: 'Outreach', Icon: Send },
+  { path: '/reports', label: 'Receipts', Icon: Receipt },
+  { path: '/transactions', label: 'Ritmo', Icon: Timer },
+  { path: '/performance', label: 'Goals', Icon: Target },
   { path: '/more', label: 'nav.more', Icon: MoreHorizontal }
 ]
 
@@ -106,23 +85,8 @@ const LEGACY_PATH_MAP: Record<string, Item> = {
   '/contacts': { path: '/contacts', label: 'nav.contacts', Icon: LayoutDashboard }
 }
 
-function SidebarItem({
-  item,
-  profileType,
-  t
-}: {
-  item: Item
-  profileType: string | undefined
-  t: (k: string) => string
-}) {
-  const labelKey = typeof item.label === 'function' ? item.label(profileType) : item.label
-  const Icon: LucideIcon =
-    typeof item.Icon === 'function'
-      ? item.Icon
-      : profileType === 'professional'
-        ? item.Icon.professional
-        : item.Icon.personal
-
+function SidebarItem({ item, t }: { item: Item; t: (k: string) => string }) {
+  const Icon = item.Icon
   return (
     <NavLink
       to={item.path}
@@ -144,7 +108,7 @@ function SidebarItem({
             }}
           />
           <Icon size={18} strokeWidth={1.75} />
-          <span>{t(labelKey)}</span>
+          <span>{t(item.label)}</span>
         </>
       )}
     </NavLink>
@@ -156,7 +120,9 @@ export function Sidebar() {
   const navigate = useNavigate()
   const active = useProfileStore((s) => s.getActive())
 
-  const templatePaths = new Set([...MAIN_MENU.map((i) => i.path), ...GENERAL.map((i) => i.path)])
+  const mainMenu = active?.type === 'professional' ? MAIN_MENU_PROFESSIONAL : MAIN_MENU_PERSONAL
+
+  const templatePaths = new Set([...mainMenu.map((i) => i.path), ...GENERAL.map((i) => i.path)])
   const allowedLegacy =
     active?.sidebarItems?.filter((p) => !templatePaths.has(p) && LEGACY_PATH_MAP[p]) ?? []
 
@@ -169,10 +135,12 @@ export function Sidebar() {
         padding: '22px 16px 16px'
       }}
     >
+      {/* Profile switcher — dropdown com lista de perfis + criar/editar */}
       <div className="relative mb-[26px]">
         <ProfileSwitcher />
       </div>
 
+      {/* Main Menu heading (12px/500) */}
       <div className="flex items-center gap-[5px] px-2 mb-2" style={{ color: '#6a6a70' }}>
         <span className="text-[12px] font-medium">{t('sidebar.main_menu')}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -181,11 +149,12 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-[1px]">
-        {MAIN_MENU.map((item) => (
-          <SidebarItem key={item.path} item={item} profileType={active?.type} t={t} />
+        {mainMenu.map((item) => (
+          <SidebarItem key={item.path} item={item} t={t} />
         ))}
       </nav>
 
+      {/* Itens legados permitidos pelo perfil (default = vazio) */}
       {allowedLegacy.length > 0 && (
         <>
           <div className="flex items-center gap-[5px] px-2 mt-[18px] mb-2" style={{ color: '#6a6a70' }}>
@@ -194,12 +163,13 @@ export function Sidebar() {
           <nav className="flex flex-col gap-[1px]">
             {allowedLegacy.map((path) => {
               const item = LEGACY_PATH_MAP[path]
-              return <SidebarItem key={path} item={item} profileType={active?.type} t={t} />
+              return <SidebarItem key={path} item={item} t={t} />
             })}
           </nav>
         </>
       )}
 
+      {/* General heading (12px/500) */}
       <div className="flex items-center gap-[5px] px-2 mt-[18px] mb-2" style={{ color: '#6a6a70' }}>
         <span className="text-[12px] font-medium">{t('sidebar.general')}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -208,15 +178,13 @@ export function Sidebar() {
       </div>
       <nav className="flex flex-col gap-[1px]">
         {GENERAL.map((item) => (
-          <SidebarItem key={item.path} item={item} profileType={active?.type} t={t} />
+          <SidebarItem key={item.path} item={item} t={t} />
         ))}
       </nav>
 
-      {/* Trial card */}
-      <div
-        className="mt-auto relative overflow-hidden p-4 rounded-[14px] border border-[#232327]"
-        style={{ background: 'linear-gradient(165deg, #161619, #101012)' }}
-      >
+      {/* Trial card — gradient 165deg + border #232327 + border-radius 14px */}
+      <div className="mt-auto relative overflow-hidden p-4 rounded-[14px] border border-[#232327]"
+        style={{ background: 'linear-gradient(165deg, #161619, #101012)' }}>
         <div
           className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center mb-[14px]"
           style={{ background: '#202024' }}
@@ -224,10 +192,13 @@ export function Sidebar() {
           <Zap size={18} strokeWidth={0} fill="#cbd5e1" />
         </div>
         <div className="text-[15px] font-semibold mb-[10px]" style={{ color: '#f4f4f6' }}>
-          {t('sidebar.trial_title')}
+          Free Trial Version
         </div>
         <div className="h-[5px] rounded-[3px] overflow-hidden mb-[10px]" style={{ background: '#26262a' }}>
-          <div className="h-full rounded-[3px]" style={{ width: '62%', background: '#6b6b72' }} />
+          <div
+            className="h-full rounded-[3px]"
+            style={{ width: '62%', background: '#6b6b72' }}
+          />
         </div>
         <div className="text-[12px] leading-[1.45] mb-[13px]" style={{ color: '#86868d' }}>
           {t('sidebar.trial_body', { days: 4 })}
@@ -238,7 +209,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* User button */}
+      {/* User button — avatar 34x34 gradient azul + nome + email + chevrons */}
       <div
         className="flex items-center gap-[10px] mt-3 px-2 py-2 rounded-[12px] cursor-pointer hover:bg-bg transition-colors"
         style={{ border: '1px solid #1d1d20' }}
@@ -252,7 +223,10 @@ export function Sidebar() {
           <div className="text-[13px] font-semibold truncate" style={{ color: '#f0f0f2' }}>
             Nero Design
           </div>
-          <div className="text-[11px] truncate" style={{ color: '#7a7a80' }}>
+          <div
+            className="text-[11px] truncate"
+            style={{ color: '#7a7a80' }}
+          >
             neroodesigner@gmail.com
           </div>
         </div>

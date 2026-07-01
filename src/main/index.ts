@@ -25,8 +25,13 @@ function createWindow(): BrowserWindow {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
+      mainWindow.show()
+      mainWindow.webContents.openDevTools({ mode: 'detach' })
+    })
+
+    mainWindow.webContents.on('console-message', (_e, level, msg, line, source) => {
+      console.log(`[renderer console:${level}]`, msg, `@${source}:${line}`)
+    })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)

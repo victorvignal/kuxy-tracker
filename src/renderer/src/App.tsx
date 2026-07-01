@@ -1,13 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
-import {
-  ProfileDashboard,
-  ProfileNotifications,
-  ProfileSubscriptions,
-  ProfileSpending,
-  ProfileReports,
-  ProfileTransactions
-} from './components/ProfileRouter'
+import { ProfileDashboard } from './components/ProfileRouter'
 import { Habits } from './pages/Habits'
 import { Routines } from './pages/Routines'
 import { Calendar } from './pages/Calendar'
@@ -19,7 +12,12 @@ import { Finance } from './pages/Finance'
 import { Projects } from './pages/Projects'
 import { Settings } from './pages/Settings'
 import { Contacts } from './pages/Contacts'
+import { Transactions } from './pages/Transactions'
+import { Notifications } from './pages/Notifications'
 import { Earnings } from './pages/Earnings'
+import { Spending } from './pages/Spending'
+import { Subscriptions } from './pages/Subscriptions'
+import { Reports } from './pages/Reports'
 import { Performance } from './pages/Performance'
 import { More } from './pages/More'
 import { Help } from './pages/Help'
@@ -33,13 +31,13 @@ export default function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<ProfileDashboard />} />
 
-          {/* Itens do template Pessoal Dashboard — fazem branch por perfil */}
-          <Route path="/notifications" element={<ProfileNotifications />} />
+          {/* Itens do template Pessoal Dashboard */}
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/earnings" element={<Earnings />} />
-          <Route path="/spending" element={<ProfileSpending />} />
-          <Route path="/subscriptions" element={<ProfileSubscriptions />} />
-          <Route path="/reports" element={<ProfileReports />} />
-          <Route path="/transactions" element={<ProfileTransactions />} />
+          <Route path="/spending" element={<Spending />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/transactions" element={<Transactions />} />
           <Route path="/performance" element={<Performance />} />
           <Route path="/more" element={<More />} />
           <Route path="/contacts" element={<Contacts />} />
