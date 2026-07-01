@@ -1,6 +1,6 @@
 {
   "name": "kuxy",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Desktop habit tracker with multi-profile workspaces",
   "main": "./out/main/index.js",
   "author": "Victor Vignal",
