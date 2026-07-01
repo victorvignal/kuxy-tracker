@@ -224,6 +224,13 @@ const dicts: Record<Lang, Record<string, string>> = {
     'nav.help': 'Help Center',
     'nav.feedback': 'Feedback',
     'nav.contacts': 'Contacts',
+    'nav.tasks': 'Tasks',
+    'nav.projects': 'Projects',
+    'nav.clients': 'Clients',
+    'nav.leads_finder': 'Leads Finder',
+    'nav.outreach': 'Outreach',
+    'nav.receipts': 'Receipts',
+    'nav.ritmo': 'Ritmo',
 
     'placeholder.body': 'This page is wired into the navigation but its dedicated UI is coming in a future release.',
     'placeholder.badge': 'Coming soon',
@@ -351,15 +358,14 @@ const dicts: Record<Lang, Record<string, string>> = {
     'projects.list': 'List',
 
     'common.color': 'Color',
-        'finance.confirm_archive_account': 'Archive this account? Its transactions stay in history.',
-        'finance.confirm_delete_subscription': 'Delete this subscription?',
-        'finance.edit_account': 'Edit account',
-        'finance.edit_transaction': 'Edit transaction',
-        'finance.new_account': 'New account',
-        'finance.no_subscriptions': 'No subscriptions yet',
-        'nav.projects': 'Projects',
+    'finance.confirm_archive_account': 'Archive this account? Its transactions stay in history.',
+    'finance.confirm_delete_subscription': 'Delete this subscription?',
+    'finance.edit_account': 'Edit account',
+    'finance.edit_transaction': 'Edit transaction',
+    'finance.new_account': 'New account',
+    'finance.no_subscriptions': 'No subscriptions yet',
 
-        // Settings — extended (v0.8)
+    // Settings — extended (v0.8)
         'settings.profile': 'Profile',
         'settings.profile_hint': 'Manage your active profile, theme and data',
         'settings.profile_section': 'Active profile',
@@ -628,6 +634,13 @@ const dicts: Record<Lang, Record<string, string>> = {
     'nav.help': 'Central de Ajuda',
     'nav.feedback': 'Feedback',
     'nav.contacts': 'Contatos',
+    'nav.tasks': 'Tarefas',
+    'nav.projects': 'Projetos',
+    'nav.clients': 'Clientes',
+    'nav.leads_finder': 'Busca de Leads',
+    'nav.outreach': 'Prospecção',
+    'nav.receipts': 'Recibos',
+    'nav.ritmo': 'Ritmo',
 
     'placeholder.body': 'Esta página já tá ligada na navegação mas a interface dedicada dela vem numa release futura.',
     'placeholder.badge': 'Em breve',
@@ -668,7 +681,6 @@ const dicts: Record<Lang, Record<string, string>> = {
 
     // Finance module (v0.3.0)
     'nav.finance': 'Finanças',
-    'nav.projects': 'Projetos',
     'finance.title': 'Finanças',
     'finance.subtitle_personal': 'Acompanhe seu dinheiro: contas, transações, assinaturas.',
     'finance.subtitle_professional': 'Acompanhe receitas e despesas do seu negócio.',

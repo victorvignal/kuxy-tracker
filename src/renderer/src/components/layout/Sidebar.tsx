@@ -38,7 +38,7 @@ type Item = {
 
 const MAIN_MENU_PERSONAL: Item[] = [
   { path: '/', label: 'nav.dashboard', Icon: LayoutDashboard },
-  { path: '/projects', label: 'Tasks', Icon: CheckSquare },
+  { path: '/projects', label: 'nav.tasks', Icon: CheckSquare },
   { path: '/calendar', label: 'nav.calendar', Icon: Timer },
   { path: '/notifications', label: 'nav.notifications', Icon: Bell },
   { path: '/earnings', label: 'nav.earnings', Icon: CreditCard },
@@ -54,13 +54,13 @@ const MAIN_MENU_PROFESSIONAL: Item[] = [
   { path: '/', label: 'nav.dashboard', Icon: LayoutDashboard },
   { path: '/projects', label: 'nav.projects', Icon: FolderKanban },
   { path: '/calendar', label: 'nav.calendar', Icon: Timer },
-  { path: '/notifications', label: 'Clients', Icon: Contact },
+  { path: '/notifications', label: 'nav.clients', Icon: Contact },
   { path: '/earnings', label: 'nav.earnings', Icon: CreditCard },
-  { path: '/spending', label: 'Leads Finder', Icon: Search },
-  { path: '/subscriptions', label: 'Outreach', Icon: Send },
-  { path: '/reports', label: 'Receipts', Icon: Receipt },
-  { path: '/transactions', label: 'Ritmo', Icon: Timer },
-  { path: '/performance', label: 'Goals', Icon: Target },
+  { path: '/spending', label: 'nav.leads_finder', Icon: Search },
+  { path: '/subscriptions', label: 'nav.outreach', Icon: Send },
+  { path: '/reports', label: 'nav.receipts', Icon: Receipt },
+  { path: '/transactions', label: 'nav.ritmo', Icon: Timer },
+  { path: '/performance', label: 'nav.goals', Icon: Target },
   { path: '/settings', label: 'nav.settings', Icon: SettingsIcon }
 ]
 
