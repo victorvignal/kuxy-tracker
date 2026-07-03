@@ -399,9 +399,30 @@ const dicts: Record<Lang, Record<string, string>> = {
         'projects.open_panel': 'Open details',
         'projects.close_panel': 'Close',
 
-        'sidebar.trial_title': 'Free Trial Version',
+            'sidebar.trial_title': 'Free Trial Version',
 
-        'common.color': 'Color',
+            // Receipts (v0.8.3 — split layout with A4 preview)
+            'receipts.new': 'New receipt',
+            'receipts.client': 'Client',
+            'receipts.add_item': 'Add item',
+            'receipts.subtotal': 'Subtotal',
+            'receipts.tax': 'ISS (6%)',
+            'receipts.total': 'Total',
+            'receipts.cancel': 'Cancel',
+            'receipts.generate': 'Generate receipt',
+            'receipts.preview': 'Preview',
+            'receipts.recent': 'Recent receipts',
+            'receipts.view_all': 'View all',
+            'receipts.col.description': 'Description',
+            'receipts.col.hours': 'Hours',
+            'receipts.col.rate': 'Rate/h',
+            'receipts.col.total': 'Total',
+            'receipts.col.client': 'Client',
+            'receipts.col.date': 'Date',
+            'receipts.col.due': 'Due',
+            'receipts.col.status': 'Status',
+
+            'common.color': 'Color',
     'finance.confirm_archive_account': 'Archive this account? Its transactions stay in history.',
     'finance.confirm_delete_subscription': 'Delete this subscription?',
     'finance.edit_account': 'Edit account',
@@ -859,10 +880,31 @@ const dicts: Record<Lang, Record<string, string>> = {
     'projects.confirm_delete': 'Excluir este projeto e todos os dados dele?',
     'projects.members.add': 'Adicionar membro',
     'projects.tags.add': 'Adicionar tag',
-    'projects.open_panel': 'Abrir detalhes',
-    'projects.close_panel': 'Fechar'
-  }
-}
+        'projects.open_panel': 'Abrir detalhes',
+        'projects.close_panel': 'Fechar',
+
+        // Receipts (v0.8.3 — split layout with A4 preview)
+        'receipts.new': 'Novo recibo',
+        'receipts.client': 'Cliente',
+        'receipts.add_item': 'Adicionar item',
+        'receipts.subtotal': 'Subtotal',
+        'receipts.tax': 'ISS (6%)',
+        'receipts.total': 'Total',
+        'receipts.cancel': 'Cancelar',
+        'receipts.generate': 'Gerar recibo',
+        'receipts.preview': 'Pré-visualização',
+        'receipts.recent': 'Recibos recentes',
+        'receipts.view_all': 'Ver todos',
+        'receipts.col.description': 'Descrição',
+        'receipts.col.hours': 'Horas',
+        'receipts.col.rate': 'Valor/h',
+        'receipts.col.total': 'Total',
+        'receipts.col.client': 'Cliente',
+        'receipts.col.date': 'Data',
+        'receipts.col.due': 'Vencimento',
+        'receipts.col.status': 'Status'
+      }
+    }
 
 interface LangState {
   lang: Lang

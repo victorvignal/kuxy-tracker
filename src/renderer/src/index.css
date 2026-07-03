@@ -102,6 +102,16 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  /* App-region: topbar inteira é arrastável; elementos com
+     .no-drag (botões, inputs) desativam isso pra continuar clicáveis.
+     Compatível com Electron via CSS padrão `-webkit-app-region`. */
+  .app-drag {
+    -webkit-app-region: drag;
+  }
+  .app-no-drag,
+  .app-no-drag * {
+    -webkit-app-region: no-drag;
+  }
   body {
     font-family: var(--font-sans);
     color: var(--color-text);

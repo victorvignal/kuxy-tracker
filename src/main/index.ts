@@ -15,7 +15,19 @@ function createWindow(): BrowserWindow {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#0a0a0f',
-    titleBarStyle: 'hiddenInset',
+    // No macOS, 'hiddenInset' deixa a traffic light flutuante e o
+    // Electron cuida do inset sozinho. No Windows, a barra nativa
+    // do Windows (28px) sobrepõe o conteúdo do Topbar se não
+    // compensarmos. Solução padrão: 'hidden' + titleBarOverlay —
+    // a barra nativa some e o renderer recebe as CSS vars
+    // --title-bar-height (28px) e --title-bar-overlay-color
+    // pra preencher o espaço com a cor do app.
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      height: 38,
+      color: '#0a0a0f',
+      symbolColor: '#cfcfd4'
+    },
     title: 'KUXY',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

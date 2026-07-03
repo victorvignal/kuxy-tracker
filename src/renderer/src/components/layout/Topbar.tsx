@@ -98,87 +98,93 @@ export function Topbar() {
   }
 
   return (
-    <>
-      <header
-        className="flex items-center gap-4 border-b shrink-0"
-        style={{
-          height: '38px',
-          padding: '0 24px',
-          background: 'var(--color-bg)',
-          borderColor: '#161619'
-        }}
-      >
-        {/* Title com ícone LayoutGrid 20px */}
-        <div className="flex items-center gap-[9px] flex-1 min-w-0">
-          <LayoutGrid size={20} color="#cfcfd4" strokeWidth={1.75} />
-          <span
-            className="text-[17px] font-semibold tracking-[-.01em]"
-            style={{ color: '#f4f4f6' }}
-          >
-            {title}
-          </span>
-        </div>
+      <>
+        {/* Drag region: o Topbar inteiro é arrastável, mas os botões
+            explicitamente desativam isso pra continuar clicáveis.
+            No Windows, titleBarStyle:'hidden' + titleBarOverlay (definido
+            em main/index.ts) reserva 38px no topo. O AppShell dá o
+            padding-top pra essa área ficar abaixo da barra nativa do
+            Windows. Aqui o Topbar ocupa só os 38px abaixo. */}
+        <header
+                  className="app-drag flex items-center gap-4 border-b shrink-0"
+                  style={{
+                    height: '38px',
+                    padding: '0 24px',
+                    background: 'var(--color-bg)',
+                    borderColor: '#161619'
+                  }}
+                >
+          {/* Title com ícone LayoutGrid 20px */}
+          <div className="flex items-center gap-[9px] flex-1 min-w-0">
+            <LayoutGrid size={20} color="#cfcfd4" strokeWidth={1.75} />
+            <span
+              className="text-[17px] font-semibold tracking-[-.01em]"
+              style={{ color: '#f4f4f6' }}
+            >
+              {title}
+            </span>
+          </div>
 
-        {/* Search bar 300x38 com ícone dentro + ⌘K à direita */}
-        <div
-          className="flex items-center gap-[9px] rounded-[9px] shrink-0"
-          style={{
-            width: '300px',
-            height: '38px',
-            padding: '0 12px',
-            background: '#121214',
-            border: '1px solid #232327',
-            color: '#7a7a80'
-          }}
-        >
-          <Search size={16} strokeWidth={1.75} />
-          <input
-            id="topbar-search"
-            type="text"
-            placeholder={t('common.search')}
-            className="flex-1 bg-transparent border-none outline-none text-[13px] text-text placeholder:text-text-subtle-2"
-          />
-          <span
-            className="text-[11px] border rounded-[5px] px-1.5 py-px"
-            style={{ borderColor: '#2a2a2e', color: '#6a6a70' }}
-          >
-            ⌘K
-          </span>
-        </div>
+          {/* Search bar 300x38 com ícone dentro + ⌘K à direita */}
+          <div
+                      className="app-no-drag flex items-center gap-[9px] rounded-[9px] shrink-0"
+                      style={{
+                        width: '300px',
+                        height: '30px',
+                        padding: '0 12px',
+                        background: '#121214',
+                        border: '1px solid #232327',
+                        color: '#7a7a80'
+                      }}
+                    >
+            <Search size={16} strokeWidth={1.75} />
+            <input
+              id="topbar-search"
+              type="text"
+              placeholder={t('common.search')}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] text-text placeholder:text-text-subtle-2"
+            />
+            <span
+              className="text-[11px] border rounded-[5px] px-1.5 py-px"
+              style={{ borderColor: '#2a2a2e', color: '#6a6a70' }}
+            >
+              ⌘K
+            </span>
+          </div>
 
-        {/* Divisor */}
-        <div className="w-px h-6" style={{ background: '#232327' }} />
+          {/* Divisor */}
+          <div className="app-no-drag w-px h-6" style={{ background: '#232327' }} />
 
-        {/* Botão Add (38px height, padding 0 14px, border-radius 9px) — contextual à rota */}
-        {addHandler && (
+          {/* Botão Add — contextual à rota */}
+          {addHandler && (
+            <button
+                          onClick={addHandler}
+                          className="app-no-drag flex items-center gap-[7px] h-[30px] px-[14px] rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
+                          style={{
+                            background: '#161619',
+                            border: '1px solid #232327',
+                            color: '#e8e8ea'
+                          }}
+                        >
+              Add
+              <Plus size={16} strokeWidth={1.75} />
+            </button>
+          )}
+
+          {/* Botão Invite */}
           <button
-            onClick={addHandler}
-            className="flex items-center gap-[7px] h-[38px] px-[14px] rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
-            style={{
-              background: '#161619',
-              border: '1px solid #232327',
-              color: '#e8e8ea'
-            }}
-          >
-            Add
-            <Plus size={16} strokeWidth={1.75} />
+                      onClick={handleInvite}
+                      className="app-no-drag flex items-center gap-[7px] h-[30px] px-4 rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
+                      style={{
+                        background: '#161619',
+                        border: '1px solid #232327',
+                        color: '#e8e8ea'
+                      }}
+                    >
+            <Send size={16} strokeWidth={1.75} />
+            Invite
           </button>
-        )}
-
-        {/* Botão Invite (38px height, padding 0 16px, border-radius 9px) */}
-        <button
-          onClick={handleInvite}
-          className="flex items-center gap-[7px] h-[38px] px-4 rounded-[9px] text-[13px] font-medium transition-colors hover:opacity-90"
-          style={{
-            background: '#161619',
-            border: '1px solid #232327',
-            color: '#e8e8ea'
-          }}
-        >
-          <Send size={16} strokeWidth={1.75} />
-          Invite
-        </button>
-      </header>
+        </header>
 
       {showNewHabit && <NewHabitDialog onClose={() => setShowNewHabit(false)} />}
 

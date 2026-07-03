@@ -309,7 +309,7 @@ export function DashboardPro() {
           >
             <div style={{ flex: 1.4 }}>Cliente</div>
             <div style={{ flex: 1.6 }}>Vídeo</div>
-            <div style={{ width: 110, flexShrink: 0 }}>Status</div>
+            <div style={{ width: 140, flexShrink: 0 }}>Status</div>
             <div style={{ width: 90, flexShrink: 0 }}>Prazo</div>
             <div style={{ flex: 1, paddingLeft: 8 }}>Progresso</div>
           </div>
@@ -328,7 +328,7 @@ export function DashboardPro() {
                 <Briefcase size={14} color="#a78bfa" strokeWidth={1.75} />
                 <span className="truncate">{r.video}</span>
               </div>
-              <div style={{ width: 110, flexShrink: 0 }}>
+              <div style={{ width: 140, flexShrink: 0 }}>
                 <Pill tone={r.tone}>{r.status}</Pill>
               </div>
               <div style={{ width: 90, flexShrink: 0, color: '#86868d' }}>{r.due}</div>
