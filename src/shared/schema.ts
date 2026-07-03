@@ -406,8 +406,8 @@ export type SidebarItem = (typeof SIDEBAR_ITEMS)[number]
 
 /** Defaults sensatos por tipo de perfil. Editáveis depois pelo usuário. */
 export const DEFAULT_SIDEBAR_ITEMS: Record<string, SidebarItem[]> = {
-  personal: ['/', '/habits', '/routines', '/calendar', '/journal', '/focus', '/goals', '/finance'],
-  professional: ['/', '/habits', '/stats', '/journal', '/focus', '/goals', '/finance', '/projects']
+  personal: ['/', '/projects'],
+  professional: ['/', '/projects']
 }
 
 /**

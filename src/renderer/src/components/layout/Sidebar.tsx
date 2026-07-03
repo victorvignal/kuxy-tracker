@@ -20,7 +20,8 @@ import {
   Send,
   Search,
   Receipt,
-  Timer,
+  CalendarDays,
+  Clock4,
   Target,
   type LucideIcon
 } from 'lucide-react'
@@ -39,7 +40,7 @@ type Item = {
 const MAIN_MENU_PERSONAL: Item[] = [
   { path: '/', label: 'nav.dashboard', Icon: LayoutDashboard },
   { path: '/projects', label: 'nav.tasks', Icon: CheckSquare },
-  { path: '/calendar', label: 'nav.calendar', Icon: Timer },
+  { path: '/calendar', label: 'nav.calendar', Icon: CalendarDays },
   { path: '/notifications', label: 'nav.notifications', Icon: Bell },
   { path: '/earnings', label: 'nav.earnings', Icon: CreditCard },
   { path: '/spending', label: 'nav.spending', Icon: Wallet },
@@ -53,19 +54,18 @@ const MAIN_MENU_PERSONAL: Item[] = [
 const MAIN_MENU_PROFESSIONAL: Item[] = [
   { path: '/', label: 'nav.dashboard', Icon: LayoutDashboard },
   { path: '/projects', label: 'nav.projects', Icon: FolderKanban },
-  { path: '/calendar', label: 'nav.calendar', Icon: Timer },
+  { path: '/calendar', label: 'nav.calendar', Icon: CalendarDays },
   { path: '/notifications', label: 'nav.clients', Icon: Contact },
   { path: '/earnings', label: 'nav.earnings', Icon: CreditCard },
   { path: '/spending', label: 'nav.leads_finder', Icon: Search },
   { path: '/subscriptions', label: 'nav.outreach', Icon: Send },
   { path: '/reports', label: 'nav.receipts', Icon: Receipt },
-  { path: '/transactions', label: 'nav.ritmo', Icon: Timer },
+  { path: '/transactions', label: 'nav.ritmo', Icon: Clock4 },
   { path: '/performance', label: 'nav.goals', Icon: Target },
   { path: '/settings', label: 'nav.settings', Icon: SettingsIcon }
 ]
 
 const GENERAL: Item[] = [
-  { path: '/settings', label: 'nav.settings', Icon: SettingsIcon },
   { path: '/help', label: 'nav.help', Icon: HelpCircle },
   { path: '/feedback', label: 'nav.feedback', Icon: MessageSquare }
 ]
@@ -191,7 +191,7 @@ export function Sidebar() {
           <Zap size={18} strokeWidth={0} fill="#cbd5e1" />
         </div>
         <div className="text-[15px] font-semibold mb-[10px]" style={{ color: '#f4f4f6' }}>
-          Free Trial Version
+          {t('sidebar.trial_title')}
         </div>
         <div className="h-[5px] rounded-[3px] overflow-hidden mb-[10px]" style={{ background: '#26262a' }}>
           <div
@@ -208,7 +208,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* User button — avatar 34x34 gradient azul + nome + email + chevrons */}
+      {/* User button — avatar + nome do perfil + descrição + chevrons */}
       <div
         className="flex items-center gap-[10px] mt-3 px-2 py-2 rounded-[12px] cursor-pointer hover:bg-bg transition-colors"
         style={{ border: '1px solid #1d1d20' }}
@@ -220,13 +220,13 @@ export function Sidebar() {
         />
         <div className="flex-1 min-w-0">
           <div className="text-[13px] font-semibold truncate" style={{ color: '#f0f0f2' }}>
-            Nero Design
+            {active?.name || t('profile.select')}
           </div>
           <div
             className="text-[11px] truncate"
             style={{ color: '#7a7a80' }}
           >
-            neroodesigner@gmail.com
+            {active?.description || t('profile.default_name')}
           </div>
         </div>
         <ChevronsUpDown size={16} color="#6a6a70" />
