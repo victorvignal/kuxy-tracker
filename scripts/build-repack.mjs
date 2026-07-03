@@ -18,15 +18,21 @@
  */
 
 import { existsSync, mkdirSync, cpSync, rmSync, renameSync } from 'fs'
-import { join } from 'path'
-import { createRequire } from 'module'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 import { tmpdir } from 'os'
 
-const require = createRequire(import.meta.url)
-const asar = require('@electron/asar')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const ROOT = join(__dirname, '..')
 
-const ROOT = process.cwd()
-const VERSION = process.env.npm_package_version || require('./package.json').version
+// Lê package.json via fs (ESM puro, sem require)
+import { readFileSync } from 'fs'
+const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
+const VERSION = pkg.version
+
+// Importa asar via dynamic import (ESM)
+const asar = (await import('@electron/asar')).default
 const ASAR_PATH = join(ROOT, 'release', VERSION, 'win-unpacked', 'resources', 'app.asar')
 
 if (!existsSync(ASAR_PATH)) {
