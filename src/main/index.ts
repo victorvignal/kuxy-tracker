@@ -5,6 +5,7 @@ import { eq, and, gte, lte, desc, sql } from 'drizzle-orm'
 import { getDb, persistDb, getDbInstance } from './db'
 import { initAutoUpdater, checkForUpdates, quitAndInstall } from './updater'
 import * as schema from '../shared/schema'
+import { getYouTubeApiKey, mockYouTubeResults, deriveCategory, scoreFromKeywords } from './youtube'
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -491,10 +492,121 @@ function registerIpc(): void {
     })
 
     ipcMain.handle('contacts:delete', async (_e, id: number) => {
-      db.delete(schema.contacts).where(eq(schema.contacts.id, id)).run()
-      persistDb()
-      return { ok: true }
-    })
+        db.delete(schema.contacts).where(eq(schema.contacts.id, id)).run()
+        persistDb()
+        return { ok: true }
+      })
+
+      // --- Leads (v0.10.0) — prospecção via YouTube Data API ---
+      ipcMain.handle('leads:list', (_e, params: { profileId?: number; includeArchived?: boolean } = {}) => {
+        const conds: any[] = []
+        if (params.profileId) conds.push(eq(schema.leads.profileId, params.profileId))
+        if (!params.includeArchived) conds.push(eq(schema.leads.archived, false))
+        const where = conds.length ? and(...conds) : undefined
+        return db.select().from(schema.leads).where(where).orderBy(desc(schema.leads.score)).all()
+      })
+
+      ipcMain.handle('leads:create', async (_e, data: schema.NewLead) => {
+        const result = db
+          .insert(schema.leads)
+          .values({ ...data, createdAt: new Date(), updatedAt: new Date() })
+          .returning()
+          .get()
+        persistDb()
+        return result
+      })
+
+      ipcMain.handle('leads:update', async (_e, id: number, data: Partial<schema.NewLead>) => {
+        const result = db
+          .update(schema.leads)
+          .set({ ...data, updatedAt: new Date() })
+          .where(eq(schema.leads.id, id))
+          .returning()
+          .get()
+        persistDb()
+        return result
+      })
+
+      ipcMain.handle('leads:archive', async (_e, id: number, archived: boolean) => {
+        db.update(schema.leads)
+          .set({ archived, updatedAt: new Date() })
+          .where(eq(schema.leads.id, id))
+          .run()
+        persistDb()
+        return { ok: true }
+      })
+
+      ipcMain.handle('leads:delete', async (_e, id: number) => {
+        db.delete(schema.leads).where(eq(schema.leads.id, id)).run()
+        persistDb()
+        return { ok: true }
+      })
+
+      // --- YouTube Data API v3 (v0.10.0) ---
+      // Se tem key configurada em ~/.kuxy/config.json → chamada real.
+      // Sem key → retorna fallback mock (não bloqueia a UI).
+      ipcMain.handle('youtube:search', async (_e, params: { q: string; region?: string; maxResults?: number }) => {
+        const key = getYouTubeApiKey()
+        if (!key) {
+          return {
+            ok: false as const,
+            reason: 'no_api_key' as const,
+            items: mockYouTubeResults(params.q)
+          }
+        }
+        try {
+          const url = new URL('https://www.googleapis.com/youtube/v3/search')
+          url.searchParams.set('part', 'snippet')
+          url.searchParams.set('type', 'channel')
+          url.searchParams.set('q', params.q)
+          url.searchParams.set('maxResults', String(params.maxResults ?? 20))
+          if (params.region) url.searchParams.set('regionCode', params.region)
+          url.searchParams.set('key', key)
+          const res = await fetch(url.toString())
+          if (!res.ok) {
+            const text = await res.text()
+            return { ok: false as const, reason: 'api_error' as const, status: res.status, message: text }
+          }
+          const data = await res.json() as { items?: Array<{
+            id: { channelId: string }
+            snippet: {
+              title: string
+              description: string
+              thumbnails: { default?: { url: string } }
+              country?: string
+            }
+          }> }
+          // 2ª chamada pra pegar stats (subscribers) de cada channel
+          const ids = (data.items ?? []).map((i) => i.id.channelId).join(',')
+          let stats: Record<string, { subscriberCount?: string }> = {}
+          if (ids) {
+            const statsUrl = new URL('https://www.googleapis.com/youtube/v3/channels')
+            statsUrl.searchParams.set('part', 'statistics')
+            statsUrl.searchParams.set('id', ids)
+            statsUrl.searchParams.set('key', key)
+            const sr = await fetch(statsUrl.toString())
+            if (sr.ok) {
+              const sd = await sr.json() as { items?: Array<{ id: string; statistics: { subscriberCount?: string } }> }
+              stats = Object.fromEntries((sd.items ?? []).map((c) => [c.id, c.statistics]))
+            }
+          }
+          const items = (data.items ?? []).map((i) => ({
+            externalId: i.id.channelId,
+            name: i.snippet.title,
+            handle: '@' + i.snippet.title.toLowerCase().replace(/\s+/g, ''),
+            avatarUrl: i.snippet.thumbnails.default?.url ?? null,
+            region: i.snippet.country ?? null,
+            category: deriveCategory(i.snippet.title + ' ' + i.snippet.description),
+            followers: parseInt(stats[i.id.channelId]?.subscriberCount ?? '0', 10),
+            score: scoreFromKeywords(i.snippet.title + ' ' + i.snippet.description, params.q)
+          }))
+          return { ok: true as const, items }
+        } catch (e: any) {
+          return { ok: false as const, reason: 'network_error' as const, message: String(e?.message ?? e) }
+        }
+      })
+
+      ipcMain.handle('youtube:hasKey', () => !!getYouTubeApiKey())
 
   // --- Categories ---
   ipcMain.handle('categories:list', (_e, params: { profileId?: number; type?: 'income' | 'expense' } = {}) => {

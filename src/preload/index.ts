@@ -14,8 +14,24 @@ import type {
   NewProjectMember,
   NewProjectTag,
   NewProjectSubitem,
-  NewContact
+  NewContact,
+  NewLead
 } from '../shared/schema'
+
+export type YouTubeSearchItem = {
+  externalId: string
+  name: string
+  handle: string | null
+  avatarUrl: string | null
+  region: string | null
+  category: string | null
+  followers: number
+  score: number
+}
+
+export type YouTubeSearchResult =
+  | { ok: true; items: YouTubeSearchItem[] }
+  | { ok: false; reason: 'no_api_key' | 'api_error' | 'network_error'; status?: number; message?: string; items?: YouTubeSearchItem[] }
 
 const api = {
   profiles: {
@@ -197,6 +213,23 @@ const api = {
       ipcRenderer.invoke('contacts:archive', id, archived) as Promise<{ ok: boolean }>,
     delete: (id: number) =>
       ipcRenderer.invoke('contacts:delete', id) as Promise<{ ok: boolean }>
+  },
+  leads: {
+    list: (params?: { profileId?: number; includeArchived?: boolean }) =>
+      ipcRenderer.invoke('leads:list', params || {}) as Promise<any[]>,
+    create: (data: NewLead) =>
+      ipcRenderer.invoke('leads:create', data) as Promise<any>,
+    update: (id: number, data: Partial<NewLead>) =>
+      ipcRenderer.invoke('leads:update', id, data) as Promise<any>,
+    archive: (id: number, archived: boolean) =>
+      ipcRenderer.invoke('leads:archive', id, archived) as Promise<{ ok: boolean }>,
+    delete: (id: number) =>
+      ipcRenderer.invoke('leads:delete', id) as Promise<{ ok: boolean }>
+  },
+  youtube: {
+    search: (params: { q: string; region?: string; maxResults?: number }) =>
+      ipcRenderer.invoke('youtube:search', params) as Promise<YouTubeSearchResult>,
+    hasKey: () => ipcRenderer.invoke('youtube:hasKey') as Promise<boolean>
   }
 }
 

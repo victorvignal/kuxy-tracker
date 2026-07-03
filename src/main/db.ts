@@ -256,11 +256,6 @@ export async function getDb(): Promise<DrizzleDb> {
         );
 
         -- Contacts (CRM pessoal/profissional — v0.9.0)
-        -- Substitui o SEED hardcoded que estava em Contacts.tsx. Cada contato
-        -- pertence a um profile, tem nome, email, phone opcional, cor pra avatar,
-        -- status (active/pending/inactive), source (family/friend/work/other),
-        -- notes livres, e archived pra soft delete (mantém histórico).
-        CREATE TABLE IF NOT EXISTS contacts (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
           name TEXT NOT NULL,
@@ -315,6 +310,32 @@ export async function getDb(): Promise<DrizzleDb> {
     CREATE INDEX IF NOT EXISTS idx_accounts_profile ON accounts(profile_id);
         CREATE INDEX IF NOT EXISTS idx_categories_profile ON categories(profile_id);
         CREATE INDEX IF NOT EXISTS idx_contacts_profile ON contacts(profile_id);
+
+    -- Leads (prospecção via YouTube — v0.10.0)
+    -- Cada lead é um canal/creator prospectado. externalId é o ID da
+    -- plataforma (YouTube: UC...). Email/notes ficam null até vc
+    -- contatar e preencher manualmente (YouTube API não expõe email).
+    CREATE TABLE IF NOT EXISTS leads (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+      external_id TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'youtube',
+      name TEXT NOT NULL,
+      handle TEXT,
+      avatar_url TEXT,
+      region TEXT,
+      category TEXT,
+      followers INTEGER NOT NULL DEFAULT 0,
+      score INTEGER NOT NULL DEFAULT 0,
+      email TEXT,
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'new',
+      archived INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_leads_profile ON leads(profile_id);
+    CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(score DESC);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_profile ON subscriptions(profile_id);
     CREATE INDEX IF NOT EXISTS idx_projects_profile_status ON projects(profile_id, status, sort_order);
     CREATE INDEX IF NOT EXISTS idx_subitems_project ON project_subitems(project_id, sort_order);
