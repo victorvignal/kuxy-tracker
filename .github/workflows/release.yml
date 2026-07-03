@@ -1,13 +1,15 @@
 name: Release KUXY
 
 # Builda e publica nova versão do KUXY quando você der push em uma tag
-# no formato kuxy-vX.Y.Z. Sem prefixo conflitando com outros projetos
-# porque este repo é dedicado.
-# Ex: git tag kuxy-v0.3.0 && git push origin kuxy-v0.3.0
+# no formato vX.Y.Z ou kuxy-vX.Y.Z (legado). Sem prefixo conflitando
+# com outros projetos porque este repo é dedicado.
+# Ex: git tag v0.8.3 && git push origin v0.8.3
 
 on:
   push:
     tags:
+      # Aceita 'v*' (novo padrão) e 'kuxy-v*' (legado).
+      - 'v*'
       - 'kuxy-v*'
   workflow_dispatch:
 
@@ -53,7 +55,9 @@ jobs:
           npm run build:win
           EXIT=$?
           PKG_VERSION=$(node -p "require('./package.json').version")
-          if [ -f "release/${PKG_VERSION}/KUXY Setup ${PKG_VERSION}.exe" ] && [ -f "release/${PKG_VERSION}/KUXY Setup ${PKG_VERSION}.exe.blockmap" ]; then
+          # electron-builder gera "KUXY-Setup-${VERSION}.exe" no Windows
+          # (com hífen, sem espaço — diferente do macOS que usa espaço).
+          if [ -f "release/${PKG_VERSION}/KUXY-Setup-${PKG_VERSION}.exe" ] && [ -f "release/${PKG_VERSION}/KUXY-Setup-${PKG_VERSION}.exe.blockmap" ]; then
             echo "✅ Windows installer + blockmap presentes (cleanup pode ter falhado, tudo bem)"
             exit 0
           fi
