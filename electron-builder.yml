@@ -5,7 +5,10 @@ directories:
   output: release/${version}
 files:
   - '!**/.vscode/*'
+  - '!**/.git/**'
+  - '!**/node_modules/.cache/**'
   - '!src/*'
+  - '!release/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
   - '!{tailwind.config.js,postcss.config.js}'
