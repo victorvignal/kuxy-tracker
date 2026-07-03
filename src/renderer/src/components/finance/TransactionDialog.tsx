@@ -223,18 +223,30 @@ export function TransactionDialog({
           />
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <button onClick={onClose} className="btn btn-ghost flex-1">
-            {t('common.cancel')}
-          </button>
-          <button
-            onClick={submit}
-            disabled={saving || !amount || !description || !effectiveCategoryId}
-            className="btn btn-primary flex-1"
-          >
-            {saving ? t('common.loading') : t('common.save')}
-          </button>
-        </div>
+        {accounts.length === 0 ? (
+                  <div className="rounded-lg p-3 text-xs" style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--color-warning)' }}>
+                    {t('finance.no_accounts_hint')}
+                  </div>
+                ) : null}
+
+                <div className="flex gap-2 pt-2">
+                  <button onClick={onClose} className="btn btn-ghost flex-1">
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    onClick={submit}
+                    disabled={
+                      saving ||
+                      !amount ||
+                      !description ||
+                      !accountId ||
+                      !effectiveCategoryId
+                    }
+                    className="btn btn-primary flex-1"
+                  >
+                    {saving ? t('common.loading') : t('common.save')}
+                  </button>
+                </div>
       </div>
     </div>
   )

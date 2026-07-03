@@ -23,6 +23,11 @@ import {
   CalendarDays,
   Clock4,
   Target,
+  Timer,
+  BarChart3,
+  BookOpen,
+  Repeat,
+  ListChecks,
   type LucideIcon
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -73,15 +78,36 @@ const GENERAL: Item[] = [
 // Itens legados do KUXY (não aparecem por default — só se o usuário
 // adicionar explicitamente via customização de sidebar do perfil).
 const LEGACY_PATH_MAP: Record<string, Item> = {
-  '/habits': { path: '/habits', label: 'nav.habits', Icon: LayoutDashboard },
-  '/routines': { path: '/routines', label: 'nav.routines', Icon: LayoutDashboard },
-  '/calendar': { path: '/calendar', label: 'nav.calendar', Icon: LayoutDashboard },
-  '/stats': { path: '/stats', label: 'nav.stats', Icon: LayoutDashboard },
-  '/journal': { path: '/journal', label: 'nav.journal', Icon: LayoutDashboard },
-  '/focus': { path: '/focus', label: 'nav.focus', Icon: LayoutDashboard },
-  '/goals': { path: '/goals', label: 'nav.goals', Icon: LayoutDashboard },
+  '/habits': { path: '/habits', label: 'nav.habits', Icon: ListChecks },
+  '/routines': { path: '/routines', label: 'nav.routines', Icon: Repeat },
+  '/calendar': { path: '/calendar', label: 'nav.calendar', Icon: CalendarDays },
+  '/stats': { path: '/stats', label: 'nav.stats', Icon: BarChart3 },
+  '/journal': { path: '/journal', label: 'nav.journal', Icon: BookOpen },
+  '/focus': { path: '/focus', label: 'nav.focus', Icon: Timer },
+  '/goals': { path: '/goals', label: 'nav.goals', Icon: Target },
   '/finance': { path: '/finance', label: 'nav.finance', Icon: Wallet },
-  '/contacts': { path: '/contacts', label: 'nav.contacts', Icon: LayoutDashboard }
+  '/contacts': { path: '/contacts', label: 'nav.contacts', Icon: Users }
+}
+
+// Defaults antigos do v0.4.x–v0.8.1. Perfis criados nessas versões têm
+// sidebarItems = LEGACY_DEFAULT_* e vão aparecer com todos os itens
+// legacy na sidebar. Consideramos "não-customizado" se o array é
+// literalmente igual ao default antigo → filtramos fora pra não
+// poluir a UI. Se o user realmente quis um subset desses, vai ter
+// editado o form (que normaliza pra `DEFAULT_SIDEBAR_ITEMS[type]`
+// ou explicitamente selecionou itens).
+const LEGACY_DEFAULT_PERSONAL = new Set([
+  '/', '/habits', '/routines', '/calendar', '/journal', '/focus', '/goals', '/finance'
+])
+const LEGACY_DEFAULT_PROFESSIONAL = new Set([
+  '/', '/habits', '/stats', '/journal', '/focus', '/goals', '/finance', '/projects'
+])
+
+function isLegacyDefault(sidebarItems: string[], type: string): boolean {
+  const legacy = type === 'professional' ? LEGACY_DEFAULT_PROFESSIONAL : LEGACY_DEFAULT_PERSONAL
+  if (sidebarItems.length !== legacy.size) return false
+  for (const p of sidebarItems) if (!legacy.has(p)) return false
+  return true
 }
 
 function SidebarItem({ item, t }: { item: Item; t: (k: string) => string }) {
@@ -122,12 +148,22 @@ export function Sidebar() {
   const mainMenu = active?.type === 'professional' ? MAIN_MENU_PROFESSIONAL : MAIN_MENU_PERSONAL
 
   const templatePaths = new Set([...mainMenu.map((i) => i.path), ...GENERAL.map((i) => i.path)])
-  const allowedLegacy =
-    active?.sidebarItems?.filter((p) => !templatePaths.has(p) && LEGACY_PATH_MAP[p]) ?? []
+
+  // Filtra items legados do perfil. Se o perfil ainda tem o default
+  // antigo (LEGACY_DEFAULT_*) salvo no DB, considera como "não-customizado"
+  // e ignora tudo (a sidebar fica limpa, sem seção Legacy).
+  // Se o user editou explicitamente, mantém os itens extras marcados.
+  const profileIsLegacyDefault =
+    !!active?.sidebarItems && active.sidebarItems.length > 0 &&
+    isLegacyDefault(active.sidebarItems, active.type || 'personal')
+
+  const allowedLegacy = profileIsLegacyDefault
+    ? []
+    : active?.sidebarItems?.filter((p) => !templatePaths.has(p) && LEGACY_PATH_MAP[p]) ?? []
 
   return (
     <aside
-      className="shrink-0 border-r border-[#1b1b1e] flex flex-col h-screen"
+      className="shrink-0 border-r border-[#1b1b1e] flex flex-col h-screen overflow-y-auto"
       style={{
         width: 'var(--sidebar-width)',
         background: 'var(--color-bg-subtle)',

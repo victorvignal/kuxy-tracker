@@ -55,23 +55,24 @@ export function Topbar() {
   // Se não houver dialog pra rota, o botão fica escondido (não faz sentido
   // criar nada em /notifications, /reports estáticos, etc).
   const addHandler: (() => void) | null = (() => {
-    switch (location.pathname) {
-      case '/habits':
-        return () => setShowNewHabit(true)
-      case '/projects':
-        return () => setShowNewProject(true)
-      case '/subscriptions':
-        return () => setShowNewSubscription(true)
-      case '/finance':
-      case '/transactions':
-        return () => setShowNewAccount(true)
-      case '/earnings':
-      case '/spending':
-        return () => setShowNewBudget(true)
-      default:
-        return null
-    }
-  })()
+      switch (location.pathname) {
+        case '/habits':
+        case '/calendar':
+          return () => setShowNewHabit(true)
+        case '/projects':
+          return () => setShowNewProject(true)
+        case '/subscriptions':
+          return () => setShowNewSubscription(true)
+        case '/finance':
+        case '/transactions':
+          return () => setShowNewAccount(true)
+        case '/earnings':
+        case '/spending':
+          return () => setShowNewBudget(true)
+        default:
+          return null
+      }
+    })()
 
   // ⌘K / Ctrl+K → foca a search bar
   useEffect(() => {
