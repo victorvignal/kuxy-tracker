@@ -443,13 +443,58 @@ function registerIpc(): void {
   })
 
   ipcMain.handle('accounts:archive', async (_e, id: number, archived: boolean) => {
-    db.update(schema.accounts)
-      .set({ archived, updatedAt: new Date() })
-      .where(eq(schema.accounts.id, id))
-      .run()
-    persistDb()
-    return { ok: true }
-  })
+      db.update(schema.accounts)
+        .set({ archived, updatedAt: new Date() })
+        .where(eq(schema.accounts.id, id))
+        .run()
+      persistDb()
+      return { ok: true }
+    })
+
+    // --- Contacts (CRM pessoal/profissional — v0.9.0) ---
+    ipcMain.handle('contacts:list', (_e, params: { profileId?: number; includeArchived?: boolean } = {}) => {
+      const conds: any[] = []
+      if (params.profileId) conds.push(eq(schema.contacts.profileId, params.profileId))
+      if (!params.includeArchived) conds.push(eq(schema.contacts.archived, false))
+      const where = conds.length ? and(...conds) : undefined
+      return db.select().from(schema.contacts).where(where).orderBy(schema.contacts.name).all()
+    })
+
+    ipcMain.handle('contacts:create', async (_e, data: schema.NewContact) => {
+      const result = db
+        .insert(schema.contacts)
+        .values({ ...data, createdAt: new Date(), updatedAt: new Date() })
+        .returning()
+        .get()
+      persistDb()
+      return result
+    })
+
+    ipcMain.handle('contacts:update', async (_e, id: number, data: Partial<schema.NewContact>) => {
+      const result = db
+        .update(schema.contacts)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(schema.contacts.id, id))
+        .returning()
+        .get()
+      persistDb()
+      return result
+    })
+
+    ipcMain.handle('contacts:archive', async (_e, id: number, archived: boolean) => {
+      db.update(schema.contacts)
+        .set({ archived, updatedAt: new Date() })
+        .where(eq(schema.contacts.id, id))
+        .run()
+      persistDb()
+      return { ok: true }
+    })
+
+    ipcMain.handle('contacts:delete', async (_e, id: number) => {
+      db.delete(schema.contacts).where(eq(schema.contacts.id, id)).run()
+      persistDb()
+      return { ok: true }
+    })
 
   // --- Categories ---
   ipcMain.handle('categories:list', (_e, params: { profileId?: number; type?: 'income' | 'expense' } = {}) => {

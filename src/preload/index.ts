@@ -13,7 +13,8 @@ import type {
   NewProject,
   NewProjectMember,
   NewProjectTag,
-  NewProjectSubitem
+  NewProjectSubitem,
+  NewContact
 } from '../shared/schema'
 
 const api = {
@@ -109,31 +110,25 @@ const api = {
     transactions: {
       list: (params?: { profileId?: number; from?: string; to?: string; type?: 'income' | 'expense'; limit?: number }) =>
         ipcRenderer.invoke('transactions:list', params || {}) as Promise<any[]>,
-      create: (data: NewTransaction) =>
-        ipcRenderer.invoke('transactions:create', data) as Promise<any>,
+      create: (data: NewTransaction) => ipcRenderer.invoke('transactions:create', data) as Promise<any>,
       update: (id: number, data: Partial<NewTransaction>) =>
         ipcRenderer.invoke('transactions:update', id, data) as Promise<any>,
-      delete: (id: number) =>
-        ipcRenderer.invoke('transactions:delete', id) as Promise<{ ok: boolean }>
+      delete: (id: number) => ipcRenderer.invoke('transactions:delete', id) as Promise<{ ok: boolean }>
     },
     subscriptions: {
       list: (params?: { profileId?: number; activeOnly?: boolean }) =>
         ipcRenderer.invoke('subscriptions:list', params || {}) as Promise<any[]>,
-      create: (data: NewSubscription) =>
-        ipcRenderer.invoke('subscriptions:create', data) as Promise<any>,
+      create: (data: NewSubscription) => ipcRenderer.invoke('subscriptions:create', data) as Promise<any>,
       update: (id: number, data: Partial<NewSubscription>) =>
         ipcRenderer.invoke('subscriptions:update', id, data) as Promise<any>,
-      delete: (id: number) =>
-        ipcRenderer.invoke('subscriptions:delete', id) as Promise<{ ok: boolean }>
+      delete: (id: number) => ipcRenderer.invoke('subscriptions:delete', id) as Promise<{ ok: boolean }>
     },
     budgets: {
       list: (params?: { profileId?: number; includeArchived?: boolean }) =>
         ipcRenderer.invoke('budgets:list', params || {}) as Promise<any[]>,
       create: (data: any) => ipcRenderer.invoke('budgets:create', data) as Promise<any>,
-      update: (id: number, data: any) =>
-        ipcRenderer.invoke('budgets:update', id, data) as Promise<any>,
-      archive: (id: number, archived: boolean) =>
-        ipcRenderer.invoke('budgets:archive', id, archived) as Promise<any>,
+      update: (id: number, data: any) => ipcRenderer.invoke('budgets:update', id, data) as Promise<any>,
+      archive: (id: number, archived: boolean) => ipcRenderer.invoke('budgets:archive', id, archived) as Promise<any>,
       delete: (id: number) => ipcRenderer.invoke('budgets:delete', id) as Promise<{ ok: boolean }>
     },
     overview: (params: { from: string; to: string; profileId?: number }) =>
@@ -190,6 +185,18 @@ const api = {
       delete: (id: number) =>
         ipcRenderer.invoke('project_subitems:delete', id) as Promise<{ ok: boolean }>
     }
+  },
+  contacts: {
+    list: (params?: { profileId?: number; includeArchived?: boolean }) =>
+      ipcRenderer.invoke('contacts:list', params || {}) as Promise<any[]>,
+    create: (data: NewContact) =>
+      ipcRenderer.invoke('contacts:create', data) as Promise<any>,
+    update: (id: number, data: Partial<NewContact>) =>
+      ipcRenderer.invoke('contacts:update', id, data) as Promise<any>,
+    archive: (id: number, archived: boolean) =>
+      ipcRenderer.invoke('contacts:archive', id, archived) as Promise<{ ok: boolean }>,
+    delete: (id: number) =>
+      ipcRenderer.invoke('contacts:delete', id) as Promise<{ ok: boolean }>
   }
 }
 

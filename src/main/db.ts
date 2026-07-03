@@ -234,26 +234,46 @@ export async function getDb(): Promise<DrizzleDb> {
 
     -- Projects module (v0.4.0) — board Kanban estilo Notion no perfil Profissional
     CREATE TABLE IF NOT EXISTS projects (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
-      emoji TEXT DEFAULT '📁',
-      name TEXT NOT NULL,
-      client TEXT,
-      description TEXT,
-      status TEXT NOT NULL DEFAULT 'todo',
-      priority INTEGER NOT NULL DEFAULT 2,
-      progress INTEGER NOT NULL DEFAULT 0,
-      sort_order INTEGER NOT NULL DEFAULT 0,
-      due_date TEXT,
-      person TEXT,
-      youtube_url TEXT,
-      google_drive_url TEXT,
-      tiktok_url TEXT,
-      notes TEXT,
-      archived INTEGER NOT NULL DEFAULT 0,
-      created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL
-    );
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+          emoji TEXT DEFAULT '📁',
+          name TEXT NOT NULL,
+          client TEXT,
+          description TEXT,
+          status TEXT NOT NULL DEFAULT 'todo',
+          priority INTEGER NOT NULL DEFAULT 2,
+          progress INTEGER NOT NULL DEFAULT 0,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          due_date TEXT,
+          person TEXT,
+          youtube_url TEXT,
+          google_drive_url TEXT,
+          tiktok_url TEXT,
+          notes TEXT,
+          archived INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+
+        -- Contacts (CRM pessoal/profissional — v0.9.0)
+        -- Substitui o SEED hardcoded que estava em Contacts.tsx. Cada contato
+        -- pertence a um profile, tem nome, email, phone opcional, cor pra avatar,
+        -- status (active/pending/inactive), source (family/friend/work/other),
+        -- notes livres, e archived pra soft delete (mantém histórico).
+        CREATE TABLE IF NOT EXISTS contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          color TEXT NOT NULL DEFAULT '#a78bfa',
+          status TEXT NOT NULL DEFAULT 'active',
+          source TEXT NOT NULL DEFAULT 'other',
+          notes TEXT,
+          archived INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
 
     CREATE TABLE IF NOT EXISTS project_members (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -293,7 +313,8 @@ export async function getDb(): Promise<DrizzleDb> {
     CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
     CREATE INDEX IF NOT EXISTS idx_transactions_profile ON transactions(profile_id);
     CREATE INDEX IF NOT EXISTS idx_accounts_profile ON accounts(profile_id);
-    CREATE INDEX IF NOT EXISTS idx_categories_profile ON categories(profile_id);
+        CREATE INDEX IF NOT EXISTS idx_categories_profile ON categories(profile_id);
+        CREATE INDEX IF NOT EXISTS idx_contacts_profile ON contacts(profile_id);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_profile ON subscriptions(profile_id);
     CREATE INDEX IF NOT EXISTS idx_projects_profile_status ON projects(profile_id, status, sort_order);
     CREATE INDEX IF NOT EXISTS idx_subitems_project ON project_subitems(project_id, sort_order);
