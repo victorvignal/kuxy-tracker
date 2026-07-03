@@ -256,19 +256,24 @@ export async function getDb(): Promise<DrizzleDb> {
         );
 
         -- Contacts (CRM pessoal/profissional — v0.9.0)
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
-          name TEXT NOT NULL,
-          email TEXT,
-          phone TEXT,
-          color TEXT NOT NULL DEFAULT '#a78bfa',
-          status TEXT NOT NULL DEFAULT 'active',
-          source TEXT NOT NULL DEFAULT 'other',
-          notes TEXT,
-          archived INTEGER NOT NULL DEFAULT 0,
-          created_at INTEGER NOT NULL,
-          updated_at INTEGER NOT NULL
-        );
+                -- Substitui o SEED hardcoded que estava em Contacts.tsx. Cada contato
+                -- pertence a um profile, tem nome, email, phone opcional, cor pra avatar,
+                -- status (active/pending/inactive), source (family/friend/work/other),
+                -- notes livres, e archived pra soft delete (mantém histórico).
+                CREATE TABLE IF NOT EXISTS contacts (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+                  name TEXT NOT NULL,
+                  email TEXT,
+                  phone TEXT,
+                  color TEXT NOT NULL DEFAULT '#a78bfa',
+                  status TEXT NOT NULL DEFAULT 'active',
+                  source TEXT NOT NULL DEFAULT 'other',
+                  notes TEXT,
+                  archived INTEGER NOT NULL DEFAULT 0,
+                  created_at INTEGER NOT NULL,
+                  updated_at INTEGER NOT NULL
+                );
 
     CREATE TABLE IF NOT EXISTS project_members (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
