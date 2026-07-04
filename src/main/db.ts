@@ -321,26 +321,63 @@ export async function getDb(): Promise<DrizzleDb> {
     -- plataforma (YouTube: UC...). Email/notes ficam null até vc
     -- contatar e preencher manualmente (YouTube API não expõe email).
     CREATE TABLE IF NOT EXISTS leads (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
-      external_id TEXT NOT NULL,
-      source TEXT NOT NULL DEFAULT 'youtube',
-      name TEXT NOT NULL,
-      handle TEXT,
-      avatar_url TEXT,
-      region TEXT,
-      category TEXT,
-      followers INTEGER NOT NULL DEFAULT 0,
-      score INTEGER NOT NULL DEFAULT 0,
-      email TEXT,
-      notes TEXT,
-      status TEXT NOT NULL DEFAULT 'new',
-      archived INTEGER NOT NULL DEFAULT 0,
-      created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_leads_profile ON leads(profile_id);
-    CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(score DESC);
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+          external_id TEXT NOT NULL,
+          source TEXT NOT NULL DEFAULT 'youtube',
+          name TEXT NOT NULL,
+          handle TEXT,
+          avatar_url TEXT,
+          region TEXT,
+          category TEXT,
+          followers INTEGER NOT NULL DEFAULT 0,
+          score INTEGER NOT NULL DEFAULT 0,
+          email TEXT,
+          notes TEXT,
+          status TEXT NOT NULL DEFAULT 'new',
+          archived INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_leads_profile ON leads(profile_id);
+        CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(score DESC);
+
+        -- Goals (Metas v0.11.0)
+                -- Cada goal é uma meta rastreável (faturamento, clientes, vídeos, etc).
+                -- current é manual; status é on_track/at_risk/overdue/done.
+                -- Cálculo de % é feito no UI (current/target).
+        CREATE TABLE IF NOT EXISTS goals (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL DEFAULT 'custom',
+          target INTEGER NOT NULL DEFAULT 0,
+          current INTEGER NOT NULL DEFAULT 0,
+          period TEXT NOT NULL DEFAULT 'month',
+          deadline TEXT,
+          status TEXT NOT NULL DEFAULT 'on_track',
+          icon TEXT DEFAULT 'target',
+          color TEXT NOT NULL DEFAULT '#a78bfa',
+          archived INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_goals_profile ON goals(profile_id);
+
+        -- Milestones são sub-metas dentro de um goal (ex: "Atingir R$10k
+        -- em um único mês" dentro de "Faturamento do ano").
+        CREATE TABLE IF NOT EXISTS goal_milestones (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          goal_id INTEGER NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+          label TEXT NOT NULL,
+          target INTEGER NOT NULL DEFAULT 0,
+          current INTEGER NOT NULL DEFAULT 0,
+          deadline TEXT,
+          achieved_at TEXT,
+          status TEXT NOT NULL DEFAULT 'on_track',
+          created_at INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_milestones_goal ON goal_milestones(goal_id);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_profile ON subscriptions(profile_id);
     CREATE INDEX IF NOT EXISTS idx_projects_profile_status ON projects(profile_id, status, sort_order);
     CREATE INDEX IF NOT EXISTS idx_subitems_project ON project_subitems(project_id, sort_order);
@@ -380,17 +417,82 @@ export async function getDb(): Promise<DrizzleDb> {
       }
     }
     const accCount = rawDb.exec(`SELECT COUNT(*) as c FROM accounts WHERE profile_id = ${pid}`)[0]
-    const a = (accCount?.values?.[0]?.[0] as number) ?? 0
-    if (!a) {
-      const now = Date.now()
-      const isPersonal = slug === 'personal'
-      rawDb.run(
-        `INSERT INTO accounts (profile_id, name, type, balance, currency, color, icon, archived, created_at, updated_at)
-         VALUES (?, ?, ?, 0, 'BRL', ?, ?, 0, ?, ?)`,
-        [pid, isPersonal ? 'Conta corrente' : 'Conta PJ', 'checking', isPersonal ? '#8b5cf6' : '#3b82f6', 'wallet', now, now]
-      )
-    }
-  }
+        const a = (accCount?.values?.[0]?.[0] as number) ?? 0
+        if (!a) {
+          const now = Date.now()
+          const isPersonal = slug === 'personal'
+          rawDb.run(
+            `INSERT INTO accounts (profile_id, name, type, balance, currency, color, icon, archived, created_at, updated_at)
+             VALUES (?, ?, ?, 0, 'BRL', ?, ?, 0, ?, ?)`,
+            [pid, isPersonal ? 'Conta corrente' : 'Conta PJ', 'checking', isPersonal ? '#8b5cf6' : '#3b82f6', 'wallet', now, now]
+          )
+        }
+
+        // Seed 4 goals padrão por profile (Faturamento/Clientes/Vídeos/Taxa).
+        // Mesma lógica das accounts: só insere se a tabela de goals
+        // estiver vazia. Goals já existentes (de DBs mais novos) não são
+        // duplicados. v0.11.0 — esses são os valores que aparecem no design.
+        const goalCount = rawDb.exec(`SELECT COUNT(*) as c FROM goals WHERE profile_id = ${pid}`)[0]
+        const g = (goalCount?.values?.[0]?.[0] as number) ?? 0
+        if (!g) {
+          const now = Date.now()
+          // Calcula deadline fim do mês pra metas mensais e fim do ano pra anuais
+          const nowDate = new Date()
+          const endOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth() + 1, 0).toISOString().slice(0, 10)
+          const endOfYear = new Date(nowDate.getFullYear(), 11, 31).toISOString().slice(0, 10)
+          // Defaults do design Figma: R$ 20k mês / 5 clientes mês / 40 vídeos mês / 40% taxa mês
+          // + objetivo do ano R$ 112.400
+          const goalSeeds: Array<[string, string, number, number, string, string, string, string]> = [
+            // [name, type, target, current, period, deadline, status, icon]
+            ['Faturamento do mês', 'revenue', 20000, 14200, 'month', endOfMonth, 'on_track', 'dollar-sign'],
+            ['Novos clientes', 'clients', 5, 3, 'month', endOfMonth, 'at_risk', 'user-plus'],
+            ['Vídeos entregues', 'videos', 40, 28, 'month', endOfMonth, 'on_track', 'video'],
+            ['Taxa de fechamento', 'rate', 40, 32, 'month', endOfMonth, 'at_risk', 'percent'],
+            ['Objetivo do ano', 'revenue', 112400, 70000, 'year', endOfYear, 'on_track', 'trending-up']
+          ]
+          for (const [name, type, target, current, period, deadline, status, icon] of goalSeeds) {
+            rawDb.run(
+              `INSERT INTO goals (profile_id, name, type, target, current, period, deadline, status, icon, color, archived, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+              [pid, name, type, target, current, period, deadline, status, icon, '#a78bfa', now, now]
+            )
+          }
+
+          // Milestones de exemplo pra cada goal principal
+          const goals = rawDb.exec(`SELECT id, name FROM goals WHERE profile_id = ${pid} AND period = 'month'`)[0]
+          const goalList = (goals?.values ?? []) as Array<[number, string]>
+          const milestoneSeeds: Array<[number, string, number, number, string, string]> = [
+            // [goalId, label, target, current, deadline, status]
+            ...goalList.flatMap(([gid, gname]): Array<[number, string, number, number, string, string]> => {
+              if (gname.includes('Faturamento')) {
+                return [
+                  [gid, 'Atingir R$ 20k de faturamento', 20000, 14200, endOfMonth, 'on_track'],
+                  [gid, 'Fechar 2 clientes de Lifesteal SMP', 2, 1, endOfMonth, 'at_risk'],
+                  [gid, 'Enviar 50 DMs de prospecção', 50, 38, endOfMonth, 'on_track'],
+                  [gid, 'Reduzir edição média p/ 2h', 2, 3.5, endOfMonth, 'at_risk']
+                ]
+              }
+              if (gname.includes('clientes')) {
+                return [[gid, 'Onboarding de 5 novos clientes', 5, 3, endOfMonth, 'at_risk']]
+              }
+              if (gname.includes('Vídeos')) {
+                return [[gid, 'Entregar 40 vídeos no mês', 40, 28, endOfMonth, 'on_track']]
+              }
+              if (gname.includes('Taxa')) {
+                return [[gid, 'Subir taxa de fechamento para 40%', 40, 32, endOfMonth, 'at_risk']]
+              }
+              return []
+            })
+          ]
+          for (const [gid, label, target, current, deadline, status] of milestoneSeeds) {
+            rawDb.run(
+              `INSERT INTO goal_milestones (goal_id, label, target, current, deadline, status, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [gid, label, target, current, deadline, status, now]
+            )
+          }
+        }
+      }
 
   // Migrations: renomeia workspace_id → profile_id nas tabelas que existirem
   // de um DB antigo. Como sqlite não tem RENAME COLUMN nativo, recriamos a

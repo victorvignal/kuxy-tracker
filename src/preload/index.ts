@@ -15,7 +15,9 @@ import type {
   NewProjectTag,
   NewProjectSubitem,
   NewContact,
-  NewLead
+  NewLead,
+  NewGoal,
+  NewGoalMilestone
 } from '../shared/schema'
 
 export type YouTubeSearchItem = {
@@ -225,6 +227,25 @@ const api = {
       ipcRenderer.invoke('leads:archive', id, archived) as Promise<{ ok: boolean }>,
     delete: (id: number) =>
       ipcRenderer.invoke('leads:delete', id) as Promise<{ ok: boolean }>
+  },
+  goals: {
+    list: (params?: { profileId?: number; includeArchived?: boolean }) =>
+      ipcRenderer.invoke('goals:list', params || {}) as Promise<any[]>,
+    create: (data: NewGoal) => ipcRenderer.invoke('goals:create', data) as Promise<any>,
+    update: (id: number, data: Partial<NewGoal>) =>
+      ipcRenderer.invoke('goals:update', id, data) as Promise<any>,
+    archive: (id: number, archived: boolean) =>
+      ipcRenderer.invoke('goals:archive', id, archived) as Promise<{ ok: boolean }>,
+    delete: (id: number) => ipcRenderer.invoke('goals:delete', id) as Promise<{ ok: boolean }>
+  },
+  milestones: {
+    list: (params?: { goalId?: number }) =>
+      ipcRenderer.invoke('milestones:list', params || {}) as Promise<any[]>,
+    create: (data: NewGoalMilestone) =>
+      ipcRenderer.invoke('milestones:create', data) as Promise<any>,
+    update: (id: number, data: Partial<NewGoalMilestone>) =>
+      ipcRenderer.invoke('milestones:update', id, data) as Promise<any>,
+    delete: (id: number) => ipcRenderer.invoke('milestones:delete', id) as Promise<{ ok: boolean }>
   },
   youtube: {
     search: (params: { q: string; region?: string; maxResults?: number }) =>

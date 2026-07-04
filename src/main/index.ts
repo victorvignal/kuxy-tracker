@@ -608,6 +608,86 @@ function registerIpc(): void {
 
       ipcMain.handle('youtube:hasKey', () => !!getYouTubeApiKey())
 
+  // --- Goals (Metas — v0.11.0) ---
+  ipcMain.handle('goals:list', (_e, params: { profileId?: number; includeArchived?: boolean } = {}) => {
+    const conds: any[] = []
+    if (params.profileId) conds.push(eq(schema.goals.profileId, params.profileId))
+    if (!params.includeArchived) conds.push(eq(schema.goals.archived, false))
+    const where = conds.length ? and(...conds) : undefined
+    return db.select().from(schema.goals).where(where).orderBy(schema.goals.createdAt).all()
+  })
+
+  ipcMain.handle('goals:create', async (_e, data: schema.NewGoal) => {
+    const result = db
+      .insert(schema.goals)
+      .values({ ...data, createdAt: new Date(), updatedAt: new Date() })
+      .returning()
+      .get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('goals:update', async (_e, id: number, data: Partial<schema.NewGoal>) => {
+    const result = db
+      .update(schema.goals)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(schema.goals.id, id))
+      .returning()
+      .get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('goals:archive', async (_e, id: number, archived: boolean) => {
+    db.update(schema.goals)
+      .set({ archived, updatedAt: new Date() })
+      .where(eq(schema.goals.id, id))
+      .run()
+    persistDb()
+    return { ok: true }
+  })
+
+  ipcMain.handle('goals:delete', async (_e, id: number) => {
+    db.delete(schema.goals).where(eq(schema.goals.id, id)).run()
+    persistDb()
+    return { ok: true }
+  })
+
+  // --- Milestones (v0.11.0) ---
+  ipcMain.handle('milestones:list', (_e, params: { goalId?: number } = {}) => {
+    const conds: any[] = []
+    if (params.goalId) conds.push(eq(schema.goalMilestones.goalId, params.goalId))
+    const where = conds.length ? and(...conds) : undefined
+    return db.select().from(schema.goalMilestones).where(where).orderBy(schema.goalMilestones.deadline).all()
+  })
+
+  ipcMain.handle('milestones:create', async (_e, data: schema.NewGoalMilestone) => {
+    const result = db
+      .insert(schema.goalMilestones)
+      .values({ ...data, createdAt: new Date() })
+      .returning()
+      .get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('milestones:update', async (_e, id: number, data: Partial<schema.NewGoalMilestone>) => {
+    const result = db
+      .update(schema.goalMilestones)
+      .set(data)
+      .where(eq(schema.goalMilestones.id, id))
+      .returning()
+      .get()
+    persistDb()
+    return result
+  })
+
+  ipcMain.handle('milestones:delete', async (_e, id: number) => {
+    db.delete(schema.goalMilestones).where(eq(schema.goalMilestones.id, id)).run()
+    persistDb()
+    return { ok: true }
+  })
+
   // --- Categories ---
   ipcMain.handle('categories:list', (_e, params: { profileId?: number; type?: 'income' | 'expense' } = {}) => {
     const conds: any[] = []
