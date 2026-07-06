@@ -17,7 +17,7 @@
  * O script é idempotente — pode rodar várias vezes sem efeito colateral.
  */
 
-import { existsSync, mkdirSync, cpSync, rmSync, renameSync } from 'fs'
+import { existsSync, mkdirSync, cpSync, rmSync, renameSync, statSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { tmpdir } from 'os'
@@ -72,7 +72,13 @@ for (const a of ADDITIONS) {
 // 3. Repack asar
 console.log('  3/3 repacking...')
 const newAsar = ASAR_PATH + '.new'
-asar.createPackage(TMP_DIR, newAsar)
+console.log('   createPackage src:', TMP_DIR)
+console.log('   createPackage dst:', newAsar)
+await asar.createPackage(TMP_DIR, newAsar)
+console.log('   createPackage done, exists?', existsSync(newAsar))
+if (existsSync(newAsar)) {
+  console.log('   .new size:', statSync(newAsar).size)
+}
 
 // Atomic replace (Windows file lock safety: try rename, fallback to copy)
 try {
