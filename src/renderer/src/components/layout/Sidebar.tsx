@@ -53,6 +53,7 @@ const MAIN_MENU_PERSONAL: Item[] = [
   { path: '/reports', label: 'nav.reports', Icon: FileText },
   { path: '/transactions', label: 'nav.transactions', Icon: Landmark },
   { path: '/performance', label: 'nav.performance', Icon: Globe },
+  { path: '/goals', label: 'nav.goals', Icon: Target },
   { path: '/settings', label: 'nav.settings', Icon: SettingsIcon }
 ]
 
@@ -66,7 +67,7 @@ const MAIN_MENU_PROFESSIONAL: Item[] = [
   { path: '/subscriptions', label: 'nav.outreach', Icon: Send },
   { path: '/reports', label: 'nav.receipts', Icon: Receipt },
   { path: '/transactions', label: 'nav.ritmo', Icon: Clock4 },
-  { path: '/performance', label: 'nav.goals', Icon: Target },
+  { path: '/goals', label: 'nav.goals', Icon: Target },
   { path: '/settings', label: 'nav.settings', Icon: SettingsIcon }
 ]
 
