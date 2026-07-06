@@ -15,29 +15,29 @@ import { BudgetDialog } from '../finance/BudgetDialog'
 import { useProfileStore } from '../../store/useProfile'
 import { useFinanceData } from '../../hooks/useFinanceData'
 
-const TITLE_KEYS: Record<string, string> = {
-  '/': 'nav.dashboard',
-  '/notifications': 'nav.notifications',
-  '/earnings': 'nav.earnings',
-  '/spending': 'nav.spending',
-  '/subscriptions': 'nav.subscriptions',
-  '/reports': 'nav.reports',
-  '/transactions': 'nav.transactions',
-  '/performance': 'nav.performance',
-  '/more': 'nav.more',
-  '/contacts': 'nav.contacts',
-  '/help': 'nav.help',
-  '/feedback': 'nav.feedback',
-  '/habits': 'nav.habits',
-  '/routines': 'nav.routines',
-  '/calendar': 'nav.calendar',
-  '/stats': 'nav.stats',
-  '/journal': 'nav.journal',
-  '/focus': 'nav.focus',
-  '/goals': 'nav.goals',
-  '/finance': 'nav.finance',
-  '/projects': 'nav.projects',
-  '/settings': 'nav.settings'
+const TITLE_KEYS_BY_PROFILE: Record<string, Record<'personal' | 'professional', string>> = {
+  '/': { personal: 'nav.dashboard', professional: 'nav.dashboard' },
+  '/notifications': { personal: 'nav.notifications', professional: 'nav.clients' },
+  '/earnings': { personal: 'nav.earnings', professional: 'nav.earnings' },
+  '/spending': { personal: 'nav.spending', professional: 'nav.leads_finder' },
+  '/subscriptions': { personal: 'nav.subscriptions', professional: 'nav.outreach' },
+  '/reports': { personal: 'nav.reports', professional: 'nav.receipts' },
+  '/transactions': { personal: 'nav.transactions', professional: 'nav.ritmo' },
+  '/performance': { personal: 'nav.performance', professional: 'nav.goals' },
+  '/more': { personal: 'nav.more', professional: 'nav.more' },
+  '/contacts': { personal: 'nav.contacts', professional: 'nav.contacts' },
+  '/help': { personal: 'nav.help', professional: 'nav.help' },
+  '/feedback': { personal: 'nav.feedback', professional: 'nav.feedback' },
+  '/habits': { personal: 'nav.habits', professional: 'nav.habits' },
+  '/routines': { personal: 'nav.routines', professional: 'nav.routines' },
+  '/calendar': { personal: 'nav.calendar', professional: 'nav.calendar' },
+  '/stats': { personal: 'nav.stats', professional: 'nav.stats' },
+  '/journal': { personal: 'nav.journal', professional: 'nav.journal' },
+  '/focus': { personal: 'nav.focus', professional: 'nav.focus' },
+  '/goals': { personal: 'nav.goals', professional: 'nav.goals' },
+  '/finance': { personal: 'nav.finance', professional: 'nav.finance' },
+  '/projects': { personal: 'nav.tasks', professional: 'nav.projects' },
+  '/settings': { personal: 'nav.settings', professional: 'nav.settings' }
 }
 
 export function Topbar() {
@@ -54,25 +54,19 @@ export function Topbar() {
   // Mapeia rota atual → dialog que o "+ Add" deve abrir.
   // Se não houver dialog pra rota, o botão fica escondido (não faz sentido
   // criar nada em /notifications, /reports estáticos, etc).
+  const isPro = activeProfile?.type === 'professional'
   const addHandler: (() => void) | null = (() => {
-      switch (location.pathname) {
-        case '/habits':
-        case '/calendar':
-          return () => setShowNewHabit(true)
-        case '/projects':
-          return () => setShowNewProject(true)
-        case '/subscriptions':
-          return () => setShowNewSubscription(true)
-        case '/finance':
-        case '/transactions':
-          return () => setShowNewAccount(true)
-        case '/earnings':
-        case '/spending':
-          return () => setShowNewBudget(true)
-        default:
-          return null
-      }
-    })()
+    const path = location.pathname
+    if (path === '/habits' || path === '/calendar') return () => setShowNewHabit(true)
+    if (path === '/projects') return () => setShowNewProject(true)
+    // Em perfil professional, /subscriptions → Outreach (sem dialog externo)
+    if (path === '/subscriptions' && !isPro) return () => setShowNewSubscription(true)
+    // Em perfil personal, /transactions → Transações, /finance → Finance
+    if (!isPro && (path === '/finance' || path === '/transactions')) return () => setShowNewAccount(true)
+    // Em perfil personal, /earnings e /spending → Budget
+    if (!isPro && (path === '/earnings' || path === '/spending')) return () => setShowNewBudget(true)
+    return null
+  })()
 
   // ⌘K / Ctrl+K → foca a search bar
   useEffect(() => {
@@ -87,7 +81,9 @@ export function Topbar() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  const title = t(TITLE_KEYS[location.pathname] ?? 'app.name')
+  const titleKeys = TITLE_KEYS_BY_PROFILE[location.pathname]
+  const titleKey = titleKeys?.[activeProfile?.type === 'professional' ? 'professional' : 'personal']
+  const title = t(titleKey ?? 'app.name')
 
   const handleInvite = async () => {
     try {
