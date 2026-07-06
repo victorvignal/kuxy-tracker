@@ -157,17 +157,19 @@ export function Goals() {
                   </span>
                 </div>
                 <div className="text-[36px] font-bold tracking-[-.02em] leading-none mb-1.5">
-                  {formatNumber(yearlyGoal.current, yearlyGoal.type)}
-                </div>
-                <div className="text-[12px] text-text-muted mb-3">
-                  de {formatNumber(yearlyGoal.target, yearlyGoal.type)}
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold"
-                  style={{ background: 'rgba(168, 85, 247, 0.12)', color: '#a78bfa' }}>
-                  <Clock size={11} />
-                  {t('goals.remaining', { value: formatRemaining(daysUntil(yearlyGoal.deadline)) })}
-                </div>
-              </div>
+                                  {formatNumber(yearlyGoal.current, yearlyGoal.type)}
+                                </div>
+                                <div className="text-[12px] text-text-muted mb-3">
+                                  {t('goals.of_target', { target: formatNumber(yearlyGoal.target, yearlyGoal.type) })}
+                                </div>
+                                <div
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold"
+                                  style={{ background: 'rgba(168, 85, 247, 0.12)', color: '#a78bfa' }}
+                                >
+                                  <Clock size={11} />
+                                  {t('goals.remaining', { value: formatRemaining(daysUntil(yearlyGoal.deadline)) })}
+                                </div>
+                              </div>
             </div>
           </Card>
         )}
@@ -248,14 +250,18 @@ function ProgressRing({
   target,
   color,
   size = 120,
-  strokeWidth = 10
+  strokeWidth = 10,
+  showLabel = true
 }: {
   value: number
   target: number
   color: string
   size?: number
   strokeWidth?: number
+  /** Mostra texto centralizado dentro do anel. Pra anéis pequenos, deixa false. */
+  showLabel?: boolean
 }) {
+  const t = useT()
   const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0
   const r = (size - strokeWidth) / 2
   const c = 2 * Math.PI * r
@@ -277,14 +283,18 @@ function ProgressRing({
           style={{ transition: 'stroke-dashoffset 0.4s ease' }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-[28px] font-bold leading-none" style={{ color }}>
-            {Math.round(pct)}%
+      {showLabel && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center leading-none">
+            <div className="font-bold" style={{ color, fontSize: size >= 120 ? 28 : 16 }}>
+              {Math.round(pct)}%
+            </div>
+            <div className="text-text-muted mt-0.5" style={{ fontSize: size >= 120 ? 10 : 8 }}>
+              {t('goals.of_year')}
+            </div>
           </div>
-          <div className="text-[10px] text-text-muted mt-1">do ano</div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -311,17 +321,29 @@ function KPICard({ goal, onUpdate }: { goal: Goal; onUpdate: (current: number) =
           {formatNumber(goal.current, goal.type)}
         </div>
         <div className="text-[11px] text-text-muted pb-0.5">
-          / meta {formatNumber(goal.target, goal.type)}
+          {t('goals.target_suffix', { target: formatNumber(goal.target, goal.type) })}
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <ProgressRing value={goal.current} target={goal.target} color={color} size={56} strokeWidth={6} />
-        <input
-          type="number"
+        <ProgressRing
           value={goal.current}
-          onChange={(e) => onUpdate(Math.max(0, parseInt(e.target.value) || 0))}
-          className="flex-1 bg-bg-subtle border border-border rounded-md px-2 py-1 text-xs text-right focus:outline-none focus:border-accent"
+          target={goal.target}
+          color={color}
+          size={56}
+          strokeWidth={6}
+          showLabel={false}
         />
+        <div className="flex-1 min-w-0">
+          <div className="text-[11px] text-text-muted mb-1">
+            {Math.round((goal.current / Math.max(1, goal.target)) * 100)}% · {t('goals.of_year')}
+          </div>
+          <input
+            type="number"
+            value={goal.current}
+            onChange={(e) => onUpdate(Math.max(0, parseInt(e.target.value) || 0))}
+            className="w-full bg-bg-subtle border border-border rounded-md px-2 py-1 text-xs text-right focus:outline-none focus:border-accent"
+          />
+        </div>
       </div>
       {days !== null && days >= 0 && (
         <div className="text-[10px] text-text-muted">
