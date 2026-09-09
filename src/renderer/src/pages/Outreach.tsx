@@ -4,15 +4,14 @@ import { Card } from '../components/ui/Card'
 import { Btn } from '../components/ui/Btn'
 import { Pill } from '../components/ui/Pill'
 import { Avatar } from '../components/ui/Avatar'
+import { useOutreach } from '../hooks/useOutreach'
+import { useProfileStore } from '../store/useProfile'
 
 /**
  * Outreach (Profissional) — prospecção de criadores.
  *
- * Template "Outreach" do `Tempo Dashboard.dc.html`:
- *   - 4 stat cards (DMs enviadas / taxa resposta / leads ativos / fechados)
- *   - Filtros por subnicho (chips) + status (segmented control)
- *   - Tabela de leads com canal, status, último contato
- *   - Modal "Novo Lead" (placeholder)
+ * Status: dados REAIS do banco (useOutreach) + skeleton de tabela (UI do design).
+ * TODO (v0.13+): trocar tabela mock por lista real de outreach com filtros.
  */
 
 type LeadStatus = 'pendente' | 'enviado' | 'respondeu' | 'fechou' | 'ignorou'
@@ -51,6 +50,8 @@ const STATUS_TONE: Record<LeadStatus, { tone: 'warning' | 'info' | 'success' | '
 const NICHE_CHIPS = ['Todos', 'Lifestyle', 'Tech', 'Fitness', 'Gaming', 'Food', 'Travel', 'Beauty', 'Business']
 
 export function Outreach() {
+  const activeProfile = useProfileStore((s) => s.getActive())
+  const { items: outreachItems, loading, error } = useOutreach(activeProfile?.id)
   const [statusFilter, setStatusFilter] = useState<'all' | LeadStatus>('all')
   const [niche, setNiche] = useState('Todos')
   const [showNew, setShowNew] = useState(false)
@@ -69,6 +70,31 @@ export function Outreach() {
   return (
     <div className="flex-1 overflow-y-auto relative" style={{ background: 'var(--color-bg)' }}>
       <div className="px-6 pt-[18px] pb-6">
+
+        {/* Banner com dados reais do banco */}
+        {outreachItems.length === 0 && !loading && (
+          <div
+            className="mb-4 px-4 py-3 rounded-lg text-[13px]"
+            style={{ background: 'rgba(37, 211, 102, 0.08)', border: '1px solid rgba(37, 211, 102, 0.25)', color: '#4ade80' }}
+          >
+            <strong>0 outreach no banco.</strong> {error ? `Erro: ${error}` : 'Clica em "Nova mensagem" pra começar.'}
+          </div>
+        )}
+        {outreachItems.length > 0 && (
+          <div
+            className="mb-4 px-4 py-3 rounded-lg text-[13px]"
+            style={{ background: '#121214', border: '1px solid #1f1f22', color: '#86868d' }}
+          >
+            Banco tem <strong style={{ color: '#f4f4f6' }}>{outreachItems.length}</strong> outreach
+            {outreachItems.filter((o) => o.status === 'draft').length > 0 && (
+              <> · <strong style={{ color: '#fbbf24' }}>{outreachItems.filter((o) => o.status === 'draft').length}</strong> rascunhos</>
+            )}
+            {outreachItems.filter((o) => o.status === 'replied').length > 0 && (
+              <> · <strong style={{ color: '#4ade80' }}>{outreachItems.filter((o) => o.status === 'replied').length}</strong> respostas</>
+            )}
+          </div>
+        )}
+
         {/* 4 stat cards */}
         <div className="flex gap-[14px] mb-4">
           <OutreachStat label="DMs enviadas" value={String(dmCount)} delta="este mês" positive />

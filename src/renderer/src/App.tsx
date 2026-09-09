@@ -17,6 +17,7 @@ import { Journal } from './pages/Journal'
 import { Focus } from './pages/Focus'
 import { Goals } from './pages/Goals'
 import { Finance } from './pages/Finance'
+import { Outreach } from './pages/Outreach'
 import { Projects } from './pages/Projects'
 import { Settings } from './pages/Settings'
 import { Earnings } from './pages/Earnings'
@@ -66,6 +67,7 @@ export default function App() {
             <Route path="/goals" element={<Goals />} />
             <Route path="/finance" element={<Finance />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/outreach" element={<Outreach />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

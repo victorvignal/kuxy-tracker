@@ -31,6 +31,7 @@ import type {
   NewLead,
   NewQueueItem,
   NewPomodoroSession,
+  NewOutreach,
 } from '../shared/schema'
 
 // Helper: retorna any[] pra evitar conflito com tipos manuais do renderer
@@ -202,6 +203,12 @@ declare global {
       pomodoro: {
         list: (params?: { profileId?: number; from?: number; to?: number }) => Promise<Row[]>
         create: (data: NewPomodoroSession) => Promise<Row>
+      }
+
+      // ========== OUTREACH (v0.12.x) ==========
+      outreach: CrudResource<NewOutreach> & {
+        markSent: (id: number) => Promise<Row>
+        markReplied: (id: number) => Promise<Row>
       }
     }
   }

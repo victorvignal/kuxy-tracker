@@ -262,11 +262,37 @@ export async function getDb(): Promise<DrizzleDb> {
           );
 
           CREATE INDEX IF NOT EXISTS idx_queue_items_profile ON queue_items(profile_id);
-          CREATE INDEX IF NOT EXISTS idx_queue_items_position ON queue_items(profile_id, position);
-          CREATE INDEX IF NOT EXISTS idx_pomodoro_profile ON pomodoro_sessions(profile_id);
-          CREATE INDEX IF NOT EXISTS idx_pomodoro_started ON pomodoro_sessions(profile_id, started_at);
+                    CREATE INDEX IF NOT EXISTS idx_queue_items_position ON queue_items(profile_id, position);
+                    CREATE INDEX IF NOT EXISTS idx_pomodoro_profile ON pomodoro_sessions(profile_id);
+                    CREATE INDEX IF NOT EXISTS idx_pomodoro_started ON pomodoro_sessions(profile_id, started_at);
 
-          -- Projects module (v0.4.0) — board Kanban estilo Notion no perfil Profissional
+                    -- Outreach module (v0.12.x) — mensagens de prospecção no perfil Profissional.
+                    -- Cada outreach é uma mensagem pra um lead/contact com status (draft/sent/replied/etc).
+                    -- lead_id/contact_id são nullable (outreach pode ser genérica).
+                    CREATE TABLE IF NOT EXISTS outreach (
+                      id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+                      lead_id INTEGER,
+                      contact_id INTEGER,
+                      type TEXT NOT NULL DEFAULT 'email',
+                      recipient_name TEXT NOT NULL,
+                      recipient_handle TEXT,
+                      subject TEXT,
+                      content TEXT NOT NULL,
+                      status TEXT NOT NULL DEFAULT 'draft',
+                      sent_at INTEGER,
+                      replied_at INTEGER,
+                      notes TEXT,
+                      archived INTEGER NOT NULL DEFAULT 0,
+                      created_at INTEGER NOT NULL,
+                      updated_at INTEGER NOT NULL
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_outreach_profile ON outreach(profile_id);
+                    CREATE INDEX IF NOT EXISTS idx_outreach_status ON outreach(profile_id, status);
+                    CREATE INDEX IF NOT EXISTS idx_outreach_lead ON outreach(lead_id);
+                    CREATE INDEX IF NOT EXISTS idx_outreach_contact ON outreach(contact_id);
+
+                    -- Projects module (v0.4.0) — board Kanban estilo Notion no perfil Profissional
           CREATE TABLE IF NOT EXISTS projects (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,

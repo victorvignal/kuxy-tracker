@@ -18,6 +18,7 @@ import { registerContacts } from './modules/contacts'
 import { registerRitmo } from './modules/ritmo'
 import { registerFinance } from './modules/finance'
 import { registerProjects } from './modules/projects'
+import { registerOutreach } from './modules/outreach'
 import { registerDashboard } from './modules/dashboard'
 import { registerSystem } from './modules/system'
 
@@ -80,6 +81,7 @@ function registerIpc(): void {
   registerRitmo(persistDb)
   registerFinance(persistDb)
   registerProjects(persistDb)
+  registerOutreach(persistDb)
   registerDashboard()
   registerSystem()
 }
