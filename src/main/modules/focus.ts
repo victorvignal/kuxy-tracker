@@ -2,7 +2,7 @@
 // focus_sessions: create + list + totals.
 
 import { ipcMain } from 'electron'
-import { and, eq, gte, lte, sum } from 'drizzle-orm'
+import { and, eq, gte, lte } from 'drizzle-orm'
 import { getDbInstance } from '../db'
 import * as schema from '../../shared/schema'
 
