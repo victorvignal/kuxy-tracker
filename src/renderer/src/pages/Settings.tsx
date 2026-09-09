@@ -476,7 +476,7 @@ function UpdatesSection() {
   useEffect(() => {
     if (typeof window === 'undefined' || !window.api?.update) return
     window.api.update.getVersion().then(setVersion).catch(() => {})
-    window.api.isDev?.().then(setIsDev).catch(() => {})
+    window.api.app.isDev?.().then(setIsDev).catch(() => {})
     const off = window.api.update.onStatus((s) => setStatus(s as UpdateStatus))
     return () => {
       if (typeof off === 'function') off()
