@@ -683,12 +683,77 @@ function registerIpc(): void {
   })
 
   ipcMain.handle('milestones:delete', async (_e, id: number) => {
-    db.delete(schema.goalMilestones).where(eq(schema.goalMilestones.id, id)).run()
-    persistDb()
-    return { ok: true }
-  })
+      db.delete(schema.goalMilestones).where(eq(schema.goalMilestones.id, id)).run()
+      persistDb()
+      return { ok: true }
+    })
 
-  // --- Categories ---
+    // --- Ritmo (v0.11.5) — Pomodoro + queue_items ---
+
+    // queue_items
+    ipcMain.handle('queue:list', (_e, params: { profileId?: number; includeArchived?: boolean } = {}) => {
+      const conds: any[] = []
+      if (params.profileId) conds.push(eq(schema.queueItems.profileId, params.profileId))
+      if (!params.includeArchived) conds.push(eq(schema.queueItems.archived, false))
+      const where = conds.length ? and(...conds) : undefined
+      return db.select().from(schema.queueItems).where(where).orderBy(schema.queueItems.position).all()
+    })
+
+    ipcMain.handle('queue:create', async (_e, data: schema.NewQueueItem) => {
+      const result = db
+        .insert(schema.queueItems)
+        .values({ ...data, createdAt: new Date(), updatedAt: new Date() })
+        .returning()
+        .get()
+      persistDb()
+      return result
+    })
+
+    ipcMain.handle('queue:update', async (_e, id: number, data: Partial<schema.NewQueueItem>) => {
+      const result = db
+        .update(schema.queueItems)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(schema.queueItems.id, id))
+        .returning()
+        .get()
+      persistDb()
+      return result
+    })
+
+    ipcMain.handle('queue:archive', async (_e, id: number, archived: boolean) => {
+      const result = db
+        .update(schema.queueItems)
+        .set({ archived, updatedAt: new Date() })
+        .where(eq(schema.queueItems.id, id))
+        .returning()
+        .get()
+      persistDb()
+      return result
+    })
+
+    ipcMain.handle('queue:delete', async (_e, id: number) => {
+      db.delete(schema.queueItems).where(eq(schema.queueItems.id, id)).run()
+      persistDb()
+      return { ok: true }
+    })
+
+    // pomodoro_sessions
+    ipcMain.handle('pomodoro:list', (_e, params: { profileId?: number; from?: number; to?: number } = {}) => {
+      const conds: any[] = []
+      if (params.profileId) conds.push(eq(schema.pomodoroSessions.profileId, params.profileId))
+      if (params.from) conds.push(gte(schema.pomodoroSessions.startedAt, new Date(params.from)))
+      if (params.to) conds.push(lte(schema.pomodoroSessions.startedAt, new Date(params.to)))
+      const where = conds.length ? and(...conds) : undefined
+      return db.select().from(schema.pomodoroSessions).where(where).orderBy(desc(schema.pomodoroSessions.startedAt)).all()
+    })
+
+    ipcMain.handle('pomodoro:create', async (_e, data: schema.NewPomodoroSession) => {
+      const result = db.insert(schema.pomodoroSessions).values(data).returning().get()
+      persistDb()
+      return result
+    })
+
+    // --- Categories ---
   ipcMain.handle('categories:list', (_e, params: { profileId?: number; type?: 'income' | 'expense' } = {}) => {
     const conds: any[] = []
     if (params.profileId) conds.push(eq(schema.categories.profileId, params.profileId))

@@ -230,10 +230,44 @@ export async function getDb(): Promise<DrizzleDb> {
       active INTEGER NOT NULL DEFAULT 1,
       notes TEXT,
       created_at INTEGER NOT NULL
-    );
+          );
 
-    -- Projects module (v0.4.0) — board Kanban estilo Notion no perfil Profissional
-    CREATE TABLE IF NOT EXISTS projects (
+          -- Ritmo module (v0.11.5) — produtividade do editor de vídeo no perfil Profissional.
+          -- queue_items = jobs de edição priorizados (cliente + vídeo + prazo).
+          -- pomodoro_sessions = cada pomodoro concluído/interrompido, pra calcular heatmap/streak/meta.
+          CREATE TABLE IF NOT EXISTS queue_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+            client TEXT NOT NULL,
+            video TEXT NOT NULL,
+            priority TEXT NOT NULL DEFAULT 'med', -- 'high' | 'med' | 'low'
+            due_date TEXT, -- YYYY-MM-DD
+            position INTEGER NOT NULL DEFAULT 0,
+            archived INTEGER NOT NULL DEFAULT 0,
+            steps_json TEXT NOT NULL DEFAULT '[1,1,1,0]', -- [corte, sound, color, export]
+            notes TEXT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+          );
+
+          CREATE TABLE IF NOT EXISTS pomodoro_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
+            queue_item_id INTEGER REFERENCES queue_items(id) ON DELETE SET NULL,
+            duration_sec INTEGER NOT NULL,
+            planned_sec INTEGER NOT NULL DEFAULT 1500,
+            completed INTEGER NOT NULL DEFAULT 0,
+            started_at INTEGER NOT NULL,
+            ended_at INTEGER NOT NULL
+          );
+
+          CREATE INDEX IF NOT EXISTS idx_queue_items_profile ON queue_items(profile_id);
+          CREATE INDEX IF NOT EXISTS idx_queue_items_position ON queue_items(profile_id, position);
+          CREATE INDEX IF NOT EXISTS idx_pomodoro_profile ON pomodoro_sessions(profile_id);
+          CREATE INDEX IF NOT EXISTS idx_pomodoro_started ON pomodoro_sessions(profile_id, started_at);
+
+          -- Projects module (v0.4.0) — board Kanban estilo Notion no perfil Profissional
+          CREATE TABLE IF NOT EXISTS projects (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           profile_id INTEGER NOT NULL DEFAULT 1 REFERENCES profiles(id) ON DELETE CASCADE,
           emoji TEXT DEFAULT '📁',
@@ -491,10 +525,34 @@ export async function getDb(): Promise<DrizzleDb> {
               [gid, label, target, current, deadline, status, now]
             )
           }
-        }
-      }
+                  }
+                }
 
-  // Migrations: renomeia workspace_id → profile_id nas tabelas que existirem
+            // Seed: queue_items do Ritmo (somente pro profile Profissional)
+              const now = Date.now()
+              const profQueueCount = rawDb.exec(`SELECT COUNT(*) as c FROM queue_items WHERE profile_id = (SELECT id FROM profiles WHERE slug='professional')`)[0]
+            if ((profQueueCount?.values?.[0]?.[0] as number) === 0) {
+              const prof = rawDb.exec(`SELECT id FROM profiles WHERE slug='professional' LIMIT 1`)[0]
+              const profId = prof?.values?.[0]?.[0] as number
+              if (profId) {
+                const queueSeeds = [
+                  ['Northwind', 'Edição 14 — Hero Film', 'high', '2026-07-28', 0],
+                  ['Lumen Studio', 'Short Vertical #08', 'high', '2026-06-30', 1],
+                  ['Brightline', 'Documentário Cap. 3', 'med', '2026-07-02', 2],
+                  ['Velasco Films', 'Reel Cliente Final', 'med', '2026-07-05', 3],
+                  ['Pixel & Co', 'Behind the Scenes', 'low', '2026-07-08', 4]
+                ]
+                for (const [client, video, priority, due, position] of queueSeeds) {
+                  rawDb.run(
+                    `INSERT INTO queue_items (profile_id, client, video, priority, due_date, position, archived, steps_json, notes, created_at, updated_at)
+                     VALUES (?, ?, ?, ?, ?, ?, 0, '[1,1,1,0]', NULL, ?, ?)`,
+                    [profId, client, video, priority, due, position, now, now]
+                  )
+                }
+              }
+            }
+
+            // Migrations: renomeia workspace_id → profile_id nas tabelas que existirem
   // de um DB antigo. Como sqlite não tem RENAME COLUMN nativo, recriamos a
   // tabela com a coluna nova e copiamos os dados. Como o profile_id default
   // já é 1 e vamos apontar tudo pro Pessoal via backfill abaixo, isso fica
