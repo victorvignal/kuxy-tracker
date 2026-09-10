@@ -10,6 +10,7 @@ import * as schema from '../../shared/schema'
 
 export function registerFinance(persistDb: () => void): void {
   // ========== CATEGORIES ==========
+  // list custom (filtra type + ordena por name)
   ipcMain.handle('categories:list', (_e: unknown, params: { profileId?: number; type?: 'income' | 'expense' } = {}) => {
     const db = getDbInstance() as any
     const conds: any[] = []
@@ -19,6 +20,7 @@ export function registerFinance(persistDb: () => void): void {
     return db.select().from(schema.categories).where(and(...conds)).orderBy(schema.categories.name).all()
   })
 
+  // create custom (seta createdAt explicitamente)
   ipcMain.handle('categories:create', async (_e: unknown, data: any) => {
     const db = getDbInstance() as any
     const result = db.insert(schema.categories).values({ ...data, createdAt: new Date() }).returning().get()
@@ -27,7 +29,8 @@ export function registerFinance(persistDb: () => void): void {
   })
 
   // ========== TRANSACTIONS ==========
-  // list padrão via registerCrud-like custom (filtros específicos)
+  // todas custom (CRUD com side-effect em accounts.balance)
+  // list padrão
   ipcMain.handle('transactions:list', (_e: unknown, params: { profileId?: number; from?: string; to?: string; type?: 'income' | 'expense'; limit?: number } = {}) => {
     const db = getDbInstance() as any
     const conds: any[] = []

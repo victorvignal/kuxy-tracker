@@ -41,7 +41,10 @@ export function registerLeads(persistDb: () => void): void {
     table: schema.leads,
     hasUpdatedAt: false, // já fazemos update custom
     persistDb,
-    skipDelete: true,
+    skipList: true, // já fazemos list custom (com orderBy score desc)
+    skipCreate: true, // já fazemos create custom (com createdAt/updatedAt explicito)
+    skipUpdate: true, // já fazemos update custom (com updatedAt explicito)
+    skipDelete: true, // pulamos e re-registramos abaixo pra ficar explicito
   })
   // substituímos o delete que pulamos acima
   ipcMain.handle('leads:delete', async (_e: unknown, id: number) => {

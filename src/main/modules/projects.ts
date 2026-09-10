@@ -29,6 +29,9 @@ function removeById(table: any, id: number, persistDb: () => void) {
 
 export function registerProjects(persistDb: () => void): void {
   // ========== PROJECTS ==========
+  // Projects tem list/create/update/archive custom (seta updatedAt, etc)
+  // + reorder handler exclusivo. Não usa registerCrud (skip tudo).
+
   ipcMain.handle('projects:list', (_e: unknown, params: { profileId?: number; includeArchived?: boolean } = {}) => {
     const db = getDbInstance() as any
     const conds: any[] = []

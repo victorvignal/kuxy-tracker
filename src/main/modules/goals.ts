@@ -16,11 +16,13 @@ export function registerGoals(persistDb: () => void): void {
   })
 
   // goalMilestones CRUD separado (não é pivô, tem CRUD próprio)
+  // skipList: usamos list custom (filtra por goalId)
   registerCrud({
     prefix: 'milestones',
     table: schema.goalMilestones,
     hasUpdatedAt: false,
     persistDb,
+    skipList: true,
   })
 
   // milestones:list filtra por goalId
