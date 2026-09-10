@@ -1,58 +1,96 @@
+import { useEffect, useMemo, useState } from 'react'
 import {
   Briefcase,
   TrendingUp,
   DollarSign,
   Building2,
   ArrowUpRight,
-  Plus
+  Plus,
+  Circle,
+  type LucideIcon
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import { useState } from 'react'
 import { useProfileStore } from '../store/useProfile'
 import { useFinanceData } from '../hooks/useFinanceData'
+import { useEarnings } from '../hooks/useEarnings'
 import { TransactionDialog } from '../components/finance/TransactionDialog'
 import type { Account, Category } from '../types'
 
 /**
  * Earnings — fontes de receita do usuário.
  *
- * Visual baseado no template `Tempo Dashboard.dc.html`. Mostra 2 stat cards
- * grandes no topo (Total earnings + Monthly recurring) + lista de fontes
- * de receita com avatar (ícone) colorido + nome + sub + valor + trend.
+ * v0.13: lê transactions WHERE type='income' GROUP BY categoryId.
+ * Substitui o array SOURCES mock por dados reais do DB.
  *
- * Visual replica o card de lista do `Earnings` no template.
+ * Cada "source" = categoria com transações income somadas.
+ * Ícone/cor derivado do category.icon/category.color.
  */
 
-type Source = {
-  id: string
-  name: string
-  sub: string
-  Icon: LucideIcon
-  iconColor: string
-  iconBg: string
-  amount: string
-  change: string
-  positive: boolean
+// Mapeia category.icon (string) para componente Lucide
+const ICON_MAP: Record<string, LucideIcon> = {
+  briefcase: Briefcase,
+  'trending-up': TrendingUp,
+  laptop: DollarSign,
+  home: Building2,
+  repeat: ArrowUpRight,
+  circle: Circle
 }
 
-const SOURCES: Source[] = [
-  { id: '1', name: 'Salary — Company XYZ', sub: 'Monthly · Direct deposit', Icon: Briefcase, iconColor: '#4ade80', iconBg: 'rgba(74,222,128,0.12)', amount: 'R$ 7.500', change: '+5%', positive: true },
-  { id: '2', name: 'Freelance design', sub: 'Project-based · Pix', Icon: DollarSign, iconColor: '#a78bfa', iconBg: 'rgba(167,139,250,0.12)', amount: 'R$ 1.800', change: '+12%', positive: true },
-  { id: '3', name: 'Stock dividends', sub: 'Quarterly · Brokerage', Icon: TrendingUp, iconColor: '#22d3ee', iconBg: 'rgba(34,211,238,0.12)', amount: 'R$ 420', change: '+8%', positive: true },
-  { id: '4', name: 'Rental income', sub: 'Monthly · Tenant', Icon: Building2, iconColor: '#fbbf24', iconBg: 'rgba(251,191,36,0.12)', amount: 'R$ 1.200', change: '0%', positive: true },
-  { id: '5', name: 'Affiliate program', sub: 'Monthly · Amazon', Icon: ArrowUpRight, iconColor: '#f472b6', iconBg: 'rgba(244,114,182,0.12)', amount: 'R$ 180', change: '+22%', positive: true }
-]
+function pickIcon(name: string): LucideIcon {
+  return ICON_MAP[name] ?? Circle
+}
+
+// Helper: centavos → "R$ 1.234,56"
+function formatBRL(cents: number): string {
+  const reais = cents / 100
+  return reais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
 
 export function Earnings() {
   const active = useProfileStore((s) => s.getActive())
   const { accounts, categories } = useFinanceData()
+  const { data, loading, error, refresh } = useEarnings(active?.id)
   const [showDialog, setShowDialog] = useState(false)
-  const total = SOURCES.reduce((a, s) => a + parseFloat(s.amount.replace(/[^0-9]/g, '')), 0)
-  const monthly = SOURCES.filter((s) => s.sub.startsWith('Monthly')).reduce((a, s) => a + parseFloat(s.amount.replace(/[^0-9]/g, '')), 0)
+
+  // quando cria transação nova, refetch (atualiza lista de fontes)
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  // deriva dados: usa hook + computa stats simples
+  const sources = data?.sources ?? []
+  const total = data?.total ?? 0 // centavos
+  const monthlyTotal = data?.monthlyTotal ?? 0
+  const months = data?.months ?? 1
+  const txCount = data?.transactionCount ?? 0
+
+  // última transação pra mostrar "último update"
+  const lastUpdate = useMemo(() => {
+    if (!sources.length || !data) return null
+    return data
+  }, [data, sources])
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: 'var(--color-bg)' }}>
       <div className="px-6 pt-[18px] pb-6">
+
+        {/* Banner com estado */}
+        {loading && (
+          <div
+            className="mb-4 px-4 py-3 rounded-lg text-[13px]"
+            style={{ background: '#121214', border: '1px solid #1f1f22', color: '#86868d' }}
+          >
+            Carregando fontes de receita do banco...
+          </div>
+        )}
+        {error && (
+          <div
+            className="mb-4 px-4 py-3 rounded-lg text-[13px]"
+            style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171' }}
+          >
+            <strong>Erro ao carregar earnings:</strong> {error}
+          </div>
+        )}
+
         {/* 2 stat cards grandes */}
         <div className="flex gap-[14px] mb-4">
           <div
@@ -60,16 +98,15 @@ export function Earnings() {
             style={{ background: '#141416', border: '1px solid #1f1f22' }}
           >
             <div className="text-tmpl-body mb-[6px]" style={{ color: '#86868d' }}>
-              Total Earnings (30d)
+              Total Earnings
             </div>
             <div className="text-tmpl-stat mb-2" style={{ color: '#f4f4f6' }}>
-              R$ {total.toLocaleString('pt-BR')}
+              {formatBRL(total)}
             </div>
             <div className="text-tmpl-label-xs">
-              <span className="font-semibold" style={{ color: '#4ade80' }}>
-                +8% (R$ 854)
-              </span>{' '}
-              <span style={{ color: '#7a7a80' }}>· Last 30 Days</span>
+              <span style={{ color: '#7a7a80' }}>
+                {txCount} transações · {sources.length} {sources.length === 1 ? 'categoria' : 'categorias'}
+              </span>
             </div>
           </div>
           <div
@@ -77,16 +114,15 @@ export function Earnings() {
             style={{ background: '#141416', border: '1px solid #1f1f22' }}
           >
             <div className="text-tmpl-body mb-[6px]" style={{ color: '#86868d' }}>
-              Monthly Recurring
+              Média Mensal
             </div>
             <div className="text-tmpl-stat mb-2" style={{ color: '#f4f4f6' }}>
-              R$ {monthly.toLocaleString('pt-BR')}
+              {formatBRL(monthlyTotal)}
             </div>
             <div className="text-tmpl-label-xs">
-              <span className="font-semibold" style={{ color: '#4ade80' }}>
-                +5% (R$ 444)
-              </span>{' '}
-              <span style={{ color: '#7a7a80' }}>· Last 30 Days</span>
+              <span style={{ color: '#7a7a80' }}>
+                {months.toFixed(1)} meses no agregado
+              </span>
             </div>
           </div>
         </div>
@@ -98,12 +134,18 @@ export function Earnings() {
         >
           <div className="flex items-center justify-between mb-[16px]">
             <span className="text-tmpl-card-title" style={{ color: '#f4f4f6' }}>
-              {SOURCES.length} Sources
+              {sources.length} {sources.length === 1 ? 'Source' : 'Sources'}
             </span>
             <button
               onClick={() => setShowDialog(true)}
-              disabled={accounts.length === 0}
-              title={accounts.length === 0 ? 'Crie uma conta primeiro' : 'Nova receita'}
+              disabled={accounts.length === 0 || categories.filter((c) => c.type === 'income').length === 0}
+              title={
+                accounts.length === 0
+                  ? 'Crie uma conta primeiro'
+                  : categories.filter((c) => c.type === 'income').length === 0
+                  ? 'Crie uma categoria income primeiro'
+                  : 'Nova receita'
+              }
               className="flex items-center gap-[7px] h-[32px] px-3 rounded-[8px] text-tmpl-body-xs font-medium transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ background: '#161619', border: '1px solid #232327', color: '#e8e8ea' }}
             >
@@ -112,45 +154,64 @@ export function Earnings() {
             </button>
           </div>
 
-          <div className="flex flex-col">
-            {SOURCES.map((s, i) => (
-              <div
-                key={s.id}
-                className="flex items-center py-[13px] hover:opacity-95 transition-opacity cursor-pointer"
-                style={{ borderBottom: i === SOURCES.length - 1 ? 'none' : '1px solid #161618' }}
-              >
-                <div
-                  className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 mr-[14px]"
-                  style={{ background: s.iconBg }}
-                >
-                  <s.Icon size={16} color={s.iconColor} strokeWidth={1.75} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-tmpl-body" style={{ color: '#e8e8ea' }}>
-                    {s.name}
+          {sources.length === 0 ? (
+            <div className="py-8 text-center" style={{ color: '#7a7a80' }}>
+              {loading ? '...' : 'Nenhuma transação income ainda. Clica em "Add Source" pra começar.'}
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {sources.map((s, i) => {
+                const Icon = pickIcon(s.icon)
+                const iconBg = s.color + '22' // alpha ~13%
+                return (
+                  <div
+                    key={String(s.id)}
+                    className="flex items-center py-[13px] hover:opacity-95 transition-opacity"
+                    style={{ borderBottom: i === sources.length - 1 ? 'none' : '1px solid #161618' }}
+                  >
+                    <div
+                      className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 mr-[14px]"
+                      style={{ background: iconBg }}
+                    >
+                      <Icon size={16} color={s.color} strokeWidth={1.75} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-tmpl-body" style={{ color: '#e8e8ea' }}>
+                        {s.name}
+                      </div>
+                      <div className="text-tmpl-label-xs" style={{ color: '#7a7a80' }}>
+                        {s.count} {s.count === 1 ? 'transação' : 'transações'} · {formatBRL(s.monthlyAvg)}/mês
+                      </div>
+                    </div>
+                    <div className="w-[120px] text-right shrink-0">
+                      <div className="text-tmpl-body font-semibold" style={{ color: '#e8e8ea' }}>
+                        {formatBRL(s.total)}
+                      </div>
+                      <div className="text-tmpl-label-xs" style={{ color: '#4ade80' }}>
+                        {((s.total / Math.max(total, 1)) * 100).toFixed(0)}%
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-tmpl-label-xs" style={{ color: '#7a7a80' }}>
-                    {s.sub}
-                  </div>
-                </div>
-                <div className="w-[100px] text-right shrink-0">
-                  <div className="text-tmpl-body font-semibold" style={{ color: '#e8e8ea' }}>
-                    {s.amount}
-                  </div>
-                  <div className="text-tmpl-label-xs" style={{ color: s.positive ? '#4ade80' : '#7a7a80' }}>
-                    {s.change}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
+
+        {lastUpdate && (
+          <div className="mt-3 text-tmpl-label-xs text-center" style={{ color: '#5a5a60' }}>
+            Última atualização: agora · {txCount} transações processadas
+          </div>
+        )}
       </div>
 
       {showDialog && active && (
         <TransactionDialog
           onClose={() => setShowDialog(false)}
-          onSaved={() => setShowDialog(false)}
+          onSaved={() => {
+            setShowDialog(false)
+            refresh()
+          }}
           accounts={accounts as unknown as Account[]}
           categories={categories as unknown as Category[]}
           profileId={active.id}

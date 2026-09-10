@@ -17,8 +17,10 @@ import type {
   NewContact,
   NewLead,
   NewGoal,
-  NewGoalMilestone
-} from '../shared/schema'
+    NewGoalMilestone,
+    NewQueueItem,
+    NewPomodoroSession
+  } from '../shared/schema'
 
 export type YouTubeSearchItem = {
   externalId: string
@@ -246,8 +248,25 @@ const api = {
     update: (id: number, data: Partial<NewGoalMilestone>) =>
       ipcRenderer.invoke('milestones:update', id, data) as Promise<any>,
     delete: (id: number) => ipcRenderer.invoke('milestones:delete', id) as Promise<{ ok: boolean }>
-  },
-  youtube: {
+      },
+      queue: {
+        list: (params?: { profileId?: number; includeArchived?: boolean }) =>
+          ipcRenderer.invoke('queue:list', params || {}) as Promise<any[]>,
+        create: (data: NewQueueItem) =>
+          ipcRenderer.invoke('queue:create', data) as Promise<any>,
+        update: (id: number, data: Partial<NewQueueItem>) =>
+          ipcRenderer.invoke('queue:update', id, data) as Promise<any>,
+        archive: (id: number, archived: boolean) =>
+          ipcRenderer.invoke('queue:archive', id, archived) as Promise<any>,
+        delete: (id: number) => ipcRenderer.invoke('queue:delete', id) as Promise<{ ok: boolean }>
+      },
+      pomodoro: {
+        list: (params?: { profileId?: number; from?: number; to?: number }) =>
+          ipcRenderer.invoke('pomodoro:list', params || {}) as Promise<any[]>,
+        create: (data: NewPomodoroSession) =>
+          ipcRenderer.invoke('pomodoro:create', data) as Promise<any>
+      },
+      youtube: {
     search: (params: { q: string; region?: string; maxResults?: number }) =>
       ipcRenderer.invoke('youtube:search', params) as Promise<YouTubeSearchResult>,
     hasKey: () => ipcRenderer.invoke('youtube:hasKey') as Promise<boolean>

@@ -64,7 +64,7 @@ const MAIN_MENU_PROFESSIONAL: Item[] = [
   { path: '/notifications', label: 'nav.clients', Icon: Contact },
   { path: '/earnings', label: 'nav.earnings', Icon: CreditCard },
   { path: '/spending', label: 'nav.leads_finder', Icon: Search },
-  { path: '/subscriptions', label: 'nav.outreach', Icon: Send },
+  { path: '/outreach', label: 'nav.outreach', Icon: Send },
   { path: '/reports', label: 'nav.receipts', Icon: Receipt },
   { path: '/transactions', label: 'nav.ritmo', Icon: Clock4 },
   { path: '/goals', label: 'nav.goals', Icon: Target },

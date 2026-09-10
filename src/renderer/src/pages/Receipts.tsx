@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Plus, Trash2, Receipt as ReceiptIcon, ArrowRight } from 'lucide-react'
+import { Plus, Trash2, Receipt as ReceiptIcon, ArrowRight, Download } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { Btn } from '../components/ui/Btn'
 import { Avatar } from '../components/ui/Avatar'
 import { Pill } from '../components/ui/Pill'
 import { useT } from '../lib/i18n'
+import { generateAndSaveReceiptPdf } from '../lib/generateReceiptPdf'
 
 /**
  * Receipts (Profissional) — gerador de invoice + tabela de recibos recentes.
@@ -243,7 +244,23 @@ export function Receipts() {
 
               <div className="flex justify-end mt-4 gap-2">
                 <Btn variant="secondary">{t('receipts.cancel')}</Btn>
-                <Btn variant="primary" rightIcon={<ArrowRight size={14} strokeWidth={1.75} />}>
+                <Btn
+                  variant="primary"
+                  rightIcon={<ArrowRight size={14} strokeWidth={1.75} />}
+                  onClick={() =>
+                    generateAndSaveReceiptPdf({
+                      client,
+                      items,
+                      subtotal,
+                      tax,
+                      total,
+                      date: fmtDate(today),
+                      due: fmtDate(due),
+                      receiptNumber: '#0043',
+                      taxRate: TAX_RATE * 100,
+                    })
+                  }
+                >
                   {t('receipts.generate')}
                 </Btn>
               </div>
@@ -256,9 +273,27 @@ export function Receipts() {
               <span className="text-[12px] font-medium" style={{ color: '#86868d' }}>
                 {t('receipts.preview')}
               </span>
-              <span className="text-[11px]" style={{ color: '#6a6a70' }}>
-                A4
-              </span>
+              <button
+                onClick={() =>
+                  generateAndSaveReceiptPdf({
+                    client,
+                    items,
+                    subtotal,
+                    tax,
+                    total,
+                    date: fmtDate(today),
+                    due: fmtDate(due),
+                    receiptNumber: '#0043',
+                    taxRate: TAX_RATE * 100,
+                  })
+                }
+                className="flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium transition-opacity hover:opacity-80"
+                style={{ background: '#161619', border: '1px solid #232327', color: '#e8e8ea' }}
+                title="Baixar PDF"
+              >
+                <Download size={11} strokeWidth={1.75} />
+                PDF
+              </button>
             </div>
             <InvoicePreview
               client={client || '—'}

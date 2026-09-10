@@ -4,7 +4,6 @@ import { DashboardPro } from '../pages/DashboardPro'
 import { Notifications } from '../pages/Notifications'
 import { Contacts } from '../pages/Contacts'
 import { Subscriptions } from '../pages/Subscriptions'
-import { Outreach } from '../pages/Outreach'
 import { Spending } from '../pages/Spending'
 import { LeadsFinder } from '../pages/LeadsFinder'
 import { Reports } from '../pages/Reports'
@@ -34,12 +33,8 @@ export function ProfileNotifications() {
   return <Notifications />
 }
 
-/** /subscriptions: Pessoal → Subscriptions | Profissional → Outreach */
+/** /subscriptions: só Pessoal (Subscriptions/assinaturas). /outreach é separado. */
 export function ProfileSubscriptions() {
-  const active = useProfileStore((s) => s.getActive())
-  if (active?.type === 'professional') {
-    return <Outreach />
-  }
   return <Subscriptions />
 }
 

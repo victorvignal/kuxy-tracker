@@ -13,29 +13,30 @@ import {
 } from 'date-fns'
 import { useT } from '../lib/i18n'
 import { useProfileStore } from '../store/useProfile'
-import type { Completion, Habit } from '../types'
+import { useCompletions, groupByDate } from '../hooks/useCompletions'
+import { DayDetailDialog } from '../components/calendar/DayDetailDialog'
+import type { Habit } from '../types'
 
 export function Calendar() {
   const t = useT()
   const activeWs = useProfileStore((s) => s.getActive())
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [completions, setCompletions] = useState<Completion[]>([])
   const [habits, setHabits] = useState<Habit[]>([])
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
+  // range do mês visível
+  const from = format(startOfMonth(currentMonth), 'yyyy-MM-dd')
+  const to = format(endOfMonth(currentMonth), 'yyyy-MM-dd')
+  const { items: completions, refresh: refreshCompletions } = useCompletions(activeWs?.id, { from, to })
 
   useEffect(() => {
     const load = async () => {
       if (!activeWs) return
-      const from = format(startOfMonth(currentMonth), 'yyyy-MM-dd')
-      const to = format(endOfMonth(addMonths(currentMonth, 1)), 'yyyy-MM-dd')
-      const [c, h] = await Promise.all([
-        window.api.completions.list({ from, to, profileId: activeWs.id }),
-        window.api.habits.list({ profileId: activeWs.id })
-      ])
-      setCompletions(c as Completion[])
+      const h = await window.api.habits.list({ profileId: activeWs.id })
       setHabits(h as Habit[])
     }
     load()
-  }, [currentMonth, activeWs?.id])
+  }, [activeWs?.id])
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
@@ -43,11 +44,7 @@ export function Calendar() {
   const gridEnd = endOfWeek(monthEnd)
   const days = eachDayOfInterval({ start: gridStart, end: gridEnd })
 
-  const completionsByDate = new Map<string, Completion[]>()
-  for (const c of completions) {
-    if (!completionsByDate.has(c.date)) completionsByDate.set(c.date, [])
-    completionsByDate.get(c.date)!.push(c)
-  }
+  const completionsByDate = groupByDate(completions)
 
   const dayLabels = [
     t('calendar.days.sun'),
@@ -100,13 +97,17 @@ export function Calendar() {
             const inMonth = isSameMonth(day, currentMonth)
             const isToday = isSameDay(day, new Date())
             const dayCompletions = completionsByDate.get(dateStr) || []
-            const intensity = Math.min(1, dayCompletions.length / Math.max(habits.length, 1))
+            const intensity = Math.min(1, dayCompletions.length / Math.max(habits.filter((h) => !h.archived).length, 1))
+            const clickable = inMonth && !!activeWs
             return (
-              <div
+              <button
                 key={dateStr}
-                className={`aspect-square rounded-md border p-1.5 flex flex-col text-xs ${
-                  inMonth ? 'border-border bg-bg-subtle' : 'border-transparent bg-transparent text-text-subtle'
-                } ${isToday ? 'ring-1 ring-accent' : ''}`}
+                type="button"
+                disabled={!clickable}
+                onClick={() => clickable && setSelectedDate(dateStr)}
+                className={`aspect-square rounded-md border p-1.5 flex flex-col text-xs text-left transition-all ${
+                  inMonth ? 'border-border bg-bg-subtle hover:border-accent hover:bg-bg-elevated cursor-pointer' : 'border-transparent bg-transparent text-text-subtle cursor-default'
+                } ${isToday ? 'ring-1 ring-accent' : ''} disabled:cursor-default`}
                 style={
                   inMonth && intensity > 0
                     ? {
@@ -133,12 +134,27 @@ export function Calendar() {
                     })}
                   </div>
                 )}
-              </div>
+              </button>
             )
           })}
         </div>
+
+        <p className="text-[11px] text-text-subtle mt-3">
+          Clica num dia pra ver/toggle hábitos. Com intensidade baseada em quantos hábitos você fez.
+        </p>
       </div>
+
+      {selectedDate && activeWs && (
+        <DayDetailDialog
+          date={selectedDate}
+          habits={habits}
+          profileId={activeWs.id}
+          onClose={() => {
+            setSelectedDate(null)
+            refreshCompletions()
+          }}
+        />
+      )}
     </div>
   )
 }
-
