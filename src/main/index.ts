@@ -19,6 +19,7 @@ import { registerRitmo } from './modules/ritmo'
 import { registerFinance } from './modules/finance'
 import { registerProjects } from './modules/projects'
 import { registerOutreach } from './modules/outreach'
+import { registerEarnings } from './modules/earnings'
 import { registerDashboard } from './modules/dashboard'
 import { registerSystem } from './modules/system'
 
@@ -82,6 +83,7 @@ function registerIpc(): void {
   registerFinance(persistDb)
   registerProjects(persistDb)
   registerOutreach(persistDb)
+  registerEarnings()
   registerDashboard()
   registerSystem()
 }

@@ -210,6 +210,25 @@ declare global {
         markSent: (id: number) => Promise<Row>
         markReplied: (id: number) => Promise<Row>
       }
+
+      // ========== EARNINGS (v0.13) ==========
+      earnings: {
+        sources: (params?: { from?: string; to?: string; profileId?: number }) => Promise<{
+          sources: Array<{
+            id: number | 'uncategorized'
+            name: string
+            color: string
+            icon: string
+            total: number
+            count: number
+            monthlyAvg: number
+          }>
+          total: number
+          monthlyTotal: number
+          months: number
+          transactionCount: number
+        }>
+      }
     }
   }
 }
